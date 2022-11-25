@@ -1,0 +1,48 @@
+---
+title: "COVID impact on endurance athletes"
+author: "Félix Boudry"
+date: "`r Sys.Date()`"
+documentclass: article
+classoption: oneside
+lang: en-US
+output:
+  html_document:
+    toc: yes
+    number_section: yes
+    fig_caption: yes
+  word_document:
+    toc: yes
+    number_sections: 4
+    fig_caption: yes
+  pdf_document: 
+    toc: yes
+    toc_depth: 4
+    number_sections: yes
+    fig_caption: yes
+    df_print: kable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  error = TRUE,
+  message = FALSE,
+  warning = FALSE)
+
+# Import libraries
+library(readxl)
+library(tidyverse)
+library(ggpubr)
+library(rstatix)
+library(janitor)
+library(devtools)
+library(R6)
+library(superml)
+library(janitor)
+library(data.table)
+```
+
+# Information
+
+**Hypothesis** : Endurance-trained athletes would have more difficulties
+returning to training at their best level after a COVID-19 infection.
