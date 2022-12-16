@@ -12,6 +12,7 @@
 require(janitor)
 require(ggplot2)
 require(dplyr)
+require(psych)
 
 # Environment -------------------------------------------------------------
 # Load previously computed environment
@@ -19,36 +20,53 @@ rm(list = ls())
 load(file = "Env/import.RData")
 
 my_results <- lst()
+antrop_measures <- c("age", "height", "weight")
 
-antrop_measures <- c("age", "sex", "height", "weight")
+# Antropometrics ----------------------------------------------------------
 
-# Plot antropometrics -----------------------------------------------------
-for (my_dataframe in encoded_data) {
-  for (my_column in my_dataframe[, antrop_measures]) {
-    if (is.numeric(my_column)) {
-      hist(my_column)
-    } else {
-      qplot(my_column)
+## Plot -------------------------------------------------------------------
+antrop_plots <-
+  lapply(
+    X = my_data$encoded_data,
+    FUN = function(my_dataframe) {
+      mapply(
+        FUN = function(my_column, my_colname) {
+          ggplot(
+            data = as.data.frame(my_column),
+            mapping = aes(x = my_column),
+            stat = "count"
+          ) +
+            geom_histogram() +
+            xlab(my_colname) +
+            ggtitle(paste0("Distribution of subjects " , my_colname))
+        },
+        my_column = my_dataframe[, antrop_measures],
+        my_colname = antrop_measures,
+        SIMPLIFY = FALSE
+      )
     }
-  }
-}
+  )
 
-# Compute antropometrics --------------------------------------------------
-# Compute antropometric data for the populations
-my_counter <- 1
-for (my_dataframe in encoded_data) {
-  assign(paste0(names(encoded_data[my_counter])),
-         summarise(
-           my_data$completed,
-           across(
-             .cols = all_of(antrop_measures),
-             .fns = list(
-               mean = mean,
-               max = max,
-               min = min,
-               median = median
-             )
-           ),
-           na.rm = TRUE
-         ))
-}
+## Compute ----------------------------------------------------------------
+## Compute antropometric data for the populations
+antrop_data <- lapply(
+  X = my_data$raw_data,
+  FUN = function(my_dataframe) {
+    describe(x = my_dataframe) %>%
+      t() %>%
+      as.data.frame() %>%
+      select(all_of(antrop_measures)) %>%
+      round(digits = 2)
+  }
+)
+
+my_results <- lst(antrop_data, antrop_plots)
+
+rm(list = setdiff(
+  ls(),
+  c("my_data", "my_results")
+))
+
+# Export data -------------------------------------------------------------
+# Save environment data
+save.image(file = "Env/descriptive.RData")

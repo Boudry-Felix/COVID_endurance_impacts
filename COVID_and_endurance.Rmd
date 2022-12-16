@@ -6,10 +6,11 @@ documentclass: article
 classoption: oneside
 lang: en-US
 output:
-  html_document:
+  html_document: 
     toc: yes
     number_section: yes
     fig_caption: yes
+    number_sections: yes
   word_document:
     toc: yes
     number_sections: 4
@@ -24,25 +25,190 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  echo = FALSE,
-  error = TRUE,
-  message = FALSE,
-  warning = FALSE)
-
+	echo = FALSE,
+	error = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
 # Import libraries
-library(readxl)
-library(tidyverse)
-library(ggpubr)
-library(rstatix)
+library(knitr)
+library(tibble)
 library(janitor)
-library(devtools)
-library(R6)
-library(superml)
-library(janitor)
-library(data.table)
+library(dplyr)
+library(CatEncoders)
+library(ggplot2)
+library(psych)
+library(kableExtra)
+library(plyr)
+library(gridExtra)
+```
+
+```{r Sourcing}
+rm(list = ls())
+source(file = "Scripts/Import.R")
+source(file = "Scripts/Descriptive.R")
+source(file = "Scripts/Transform.R")
 ```
 
 # Information
 
 **Hypothesis** : Endurance-trained athletes would have more difficulties
 returning to training at their best level after a COVID-19 infection.
+
+# Population
+
+Some anthropometric data about the population in this study:
+
+In the population kept in this study there are
+**`r data_trans$sex_count$feminin`** womens and
+**`r data_trans$sex_count$masculin`** mens and all of the
+**`r nrow(my_data$raw_data$completed)`** subjects were infected by COVID-19.
+
+```{r}
+kable(my_results$antrop_data$completed) %>%
+  kable_styling(bootstrap_options = c("striped"))
+print(my_results$antrop_plots$completed)
+```
+
+There data will be analysed with several subcategories:
+- Sex
+- Age
+- IMC?
+- Pathology
+- Endurance trained
+- Training volume
+- Training modalities
+
+# Endurance
+
+## Training
+
+```{r}
+ggplot(mapping = aes(x = my_data$raw_data$completed$endurance_sport)) +
+  geom_bar() +
+  xlab("Endurance trained") +
+  scale_x_discrete(labels = c("Yes", "No")) +
+  ggtitle("Number of endurance trained and not trained subjects")
+```
+
+In the studied population, **`r data_trans$endurance_count$oui`** are endurance
+trained athletes.
+
+Subject's professions are shown below:
+
+```{r}
+ggplot(mapping = aes(y = my_data$raw_data$completed$profession)) +
+  geom_bar() +
+  ylab(label = "Profession") +
+  ggtitle(label = "Subject's profession")
+```
+
+Various types of activities are done by the subjects. (potential errors during 
+computing!)
+
+```{r}
+ggplot(mapping = aes(y = data_trans$sports)) +
+  geom_bar() +
+  ylab(label = "Profession") +
+  ggtitle(label = "Subject's profession")
+```
+
+## COVID symptomes
+
+```{r}
+mapply(
+  FUN = function(my_column, my_colname) {
+    ggplot(mapping = aes(x = my_column)) +
+      geom_bar(aes(fill = my_data$raw_data$completed$endurance_sport)) +
+      geom_text(aes(label = after_stat(count)), stat = "count", vjust = 1) +
+      ggtitle(my_colname) +
+      labs(fill = "Endurance")
+  },
+  my_column = data_trans$covid_symp,
+  my_colname = colnames(data_trans$covid_symp),
+  SIMPLIFY = FALSE
+) %>% 
+  marrangeGrob(nrow = 2, ncol = 3)
+```
+
+## Post COVID symptomes
+
+```{r}
+mapply(
+  FUN = function(my_column, my_colname) {
+    ggplot(mapping = aes(x = my_column)) +
+      geom_bar(aes(fill = my_data$raw_data$completed$endurance_sport)) +
+      geom_text(aes(label = ..count..), stat = "count", vjust = 2) +
+      ggtitle(my_colname) +
+      labs(fill = "Endurance")
+  },
+  my_column = data_trans$post_covid_symp,
+  my_colname = colnames(data_trans$post_covid_symp),
+  SIMPLIFY = FALSE
+) %>% 
+  marrangeGrob(nrow = 2, ncol = 3)
+```
+
+## Training resumption
+
+```{r}
+ggplot(my_data$raw_data$completed, aes(
+  x = reorder(duration_to_training, duration_to_training, function(x)
+    -length(x))
+)) +
+  geom_bar(aes(fill = my_data$raw_data$completed$endurance_sport)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  xlab("Duration to training resumption") +
+  labs(fill = "Endurance")
+```
+
+## Training symptoms
+
+```{r}
+mapply(
+  FUN = function(my_column, my_colname) {
+    ggplot(mapping = aes(x = my_column)) +
+      geom_bar(aes(fill = my_data$raw_data$completed$endurance_sport)) +
+      geom_text(aes(label = ..count..), stat = "count", vjust = 2) +
+      ggtitle(my_colname) +
+      labs(fill = "Endurance")
+  },
+  my_column = data_trans$training_symptoms,
+  my_colname = colnames(data_trans$training_symptoms),
+  SIMPLIFY = FALSE
+) %>% 
+  marrangeGrob(nrow = 2, ncol = 2)
+
+mapply(
+  FUN = function(my_column, my_colname) {
+    ggplot(mapping = aes(x = my_column)) +
+      geom_histogram(aes(fill = my_data$raw_data$completed$endurance_sport)) +
+      # geom_text(aes(label = ..count..), stat = "count", vjust = 2) +
+      ggtitle(my_colname) +
+      labs(fill = "Endurance")
+  },
+  my_column = data_trans$training_symptoms_notes,
+  my_colname = colnames(data_trans$training_symptoms_notes),
+  SIMPLIFY = FALSE
+) %>% 
+  marrangeGrob(nrow = 2, ncol = 2)
+
+ggplot(data = my_data$raw_data$completed, aes(
+  x = reorder(difficulties_duration, difficulties_duration, function(x)
+    -length(x))
+)) +
+  geom_bar() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  xlab("Difficulties duration at training")
+```
+
+## Medication
+
+Needed?
+
+
+
+
+
+
+

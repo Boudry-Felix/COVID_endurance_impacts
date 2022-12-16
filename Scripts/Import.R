@@ -27,6 +27,8 @@ my_data_completed <- read.csv(file = "Data/Answers_completed.csv")
 
 my_colnames <- read.csv(file = "Data/col_question.csv")
 
+# Format ------------------------------------------------------------------
+# Formating data for analysis
 my_data <- # Put data in list and clean it
   list("all" = my_data_all, "completed" = my_data_completed) %>%
   lapply(clean_names) %>%
@@ -35,6 +37,8 @@ my_data <- # Put data in list and clean it
 my_data <- # Change colnames from question to shorter name
   lapply(X = my_data, FUN = `colnames<-`, my_colnames$col_name)
 
+# Encoding ----------------------------------------------------------------
+# Encode answers as labels
 my_counter <- 0
 for (my_dataframe in my_data) {
   # Encode data to numerical values if not already numerical
@@ -63,8 +67,13 @@ encoded_data <-
 convert_dic <-
   list("all" = convert_dic_all, "completed" = convert_dic_completed)
 
-rm(list = setdiff(ls(), c("convert_dic", "encoded_data", "my_data")))
+my_data <- lst(raw_data = my_data, encoded_data, convert_dic)
+
+rm(list = setdiff(ls(), c("my_data")))
 
 # Export data -------------------------------------------------------------
 # Save environment data
+if (!dir.exists("Env")) {
+  dir.create("Env")
+}
 save.image(file = "Env/import.RData")
