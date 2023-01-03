@@ -1,5 +1,7 @@
 ---
-title: "COVID impact on endurance athletes"
+params:
+  new_title: "My title"
+title: "`r params$new_title`"
 author: "Félix Boudry"
 date: "`r Sys.Date()`"
 documentclass: article
@@ -44,141 +46,190 @@ library(gridExtra)
 ```
 
 ```{r Sourcing}
-rm(list = ls())
-source(file = "Scripts/Import.R")
+rm(list = setdiff(
+  x = ls(),
+  y = c(
+    "my_var",
+    "gen_env",
+    "studied_populations",
+    "my_population",
+    "my_count",
+    "var_count"
+  )
+))
+source("Scripts/Import.R")
+source("Scripts/Subset.R")
+my_data <- .GlobalEnv$studied_populations$complete
+my_var <- c("sex")
 source(file = "Scripts/Descriptive.R")
-source(file = "Scripts/Transform.R")
 ```
 
-# Information
+# Population description
 
-**Hypothesis** : Endurance-trained athletes would have more difficulties
-returning to training at their best level after a COVID-19 infection.
-
-# Population
+## Anthropometrics
 
 Some anthropometric data about the population in this study:
 
 In the population kept in this study there are
-**`r data_trans$sex_count$feminin`** womens and
-**`r data_trans$sex_count$masculin`** mens and all of the
-**`r nrow(my_data$raw_data$completed)`** subjects were infected by COVID-19.
+**`r my_results$num$results_antrop$population_caracteristics$sex$feminin`** womens and
+**`r my_results$num$results_antrop$population_caracteristics$sex$masculin`** mens and all of the
+**`r nrow(my_data)`** subjects (all) were infected by COVID-19.
 
 ```{r}
-kable(my_results$antrop_data$completed) %>%
-  kable_styling(bootstrap_options = c("striped"))
-print(my_results$antrop_plots$completed)
+my_table(my_data$covid_test)
+my_table(my_results$num$results_antrop$antrop_values)
+my_results$plots$plots_antrop$antrop_plots %>%
+  marrangeGrob(ncol = 3, nrow = 1)
 ```
-
-There data will be analysed with several subcategories:
-- Sex
-- Age
-- IMC?
-- Pathology
-- Endurance trained
-- Training volume
-- Training modalities
-
-# Endurance
 
 ## Training
 
 ```{r}
-ggplot(mapping = aes(x = my_data$raw_data$completed$endurance_sport)) +
-  geom_bar() +
-  xlab("Endurance trained") +
-  scale_x_discrete(labels = c("Yes", "No")) +
-  ggtitle("Number of endurance trained and not trained subjects")
+marrangeGrob(
+  grobs = list(
+    my_results$plots$plots_training$endu,
+    my_results$plots$plots_training$fede
+  ),
+  nrow = 1,
+  ncol = 2
+)
 ```
 
-In the studied population, **`r data_trans$endurance_count$oui`** are endurance
+In the studied population, **`r my_results$num$results_training$my_training_counts$endurance_sport$oui`** are endurance
 trained athletes.
-
-Subject's professions are shown below:
-
-```{r}
-ggplot(mapping = aes(y = my_data$raw_data$completed$profession)) +
-  geom_bar() +
-  ylab(label = "Profession") +
-  ggtitle(label = "Subject's profession")
-```
 
 Various types of activities are done by the subjects. (potential errors during 
 computing!)
 
 ```{r}
-ggplot(mapping = aes(y = data_trans$sports)) +
-  geom_bar() +
-  ylab(label = "Profession") +
-  ggtitle(label = "Subject's profession")
+my_results$plots$plots_training$sport
+my_results$plots$plots_training$train_volume
+my_results$plots$plots_training$train_sessions
 ```
 
-## COVID symptomes
+## Professions
+
+Subject's professions are shown below:
 
 ```{r}
+my_results$plots$plots_antrop$professions
+```
+
+## Pathologies
+
+`r count(my_data$pathology)[2, 2]` have a known pathology.
+
+```{r}
+my_results$plots$plots_pathologies$patho_description
+my_results$plots$plots_pathologies$patho_medication
+```
+
+# COVID impact on training
+
+## During COVID
+
+```{r}
+# my_results$plots$plots_covid$covid_symptoms
+covid_symptoms <-
+  my_data[, c(
+    "cough",
+    "fever",
+    "runny_nose",
+    "headache",
+    "sore_throat",
+    "tired",
+    "muscular_pain",
+    "vomiting",
+    "diarrhea",
+    "breathlessness",
+    "respiratory_difficulties",
+    "other_symptoms"
+  )]
 mapply(
   FUN = function(my_column, my_colname) {
     ggplot(mapping = aes(x = my_column)) +
-      geom_bar(aes(fill = my_data$raw_data$completed$endurance_sport)) +
+      geom_bar(aes(fill = my_data[[my_var]])) +
       geom_text(aes(label = after_stat(count)), stat = "count", vjust = 1) +
       ggtitle(my_colname) +
-      labs(fill = "Endurance")
+      labs(fill = my_var)
   },
-  my_column = data_trans$covid_symp,
-  my_colname = colnames(data_trans$covid_symp),
+  my_column = covid_symptoms,
+  my_colname = colnames(covid_symptoms),
   SIMPLIFY = FALSE
-) %>% 
+) %>%
   marrangeGrob(nrow = 2, ncol = 3)
 ```
 
-## Post COVID symptomes
+## Post COVID
 
 ```{r}
-mapply(
-  FUN = function(my_column, my_colname) {
-    ggplot(mapping = aes(x = my_column)) +
-      geom_bar(aes(fill = my_data$raw_data$completed$endurance_sport)) +
-      geom_text(aes(label = ..count..), stat = "count", vjust = 2) +
-      ggtitle(my_colname) +
-      labs(fill = "Endurance")
-  },
-  my_column = data_trans$post_covid_symp,
-  my_colname = colnames(data_trans$post_covid_symp),
-  SIMPLIFY = FALSE
-) %>% 
-  marrangeGrob(nrow = 2, ncol = 3)
-```
-
-## Training resumption
-
-```{r}
-ggplot(my_data$raw_data$completed, aes(
+ggplot(my_data, aes(
   x = reorder(duration_to_training, duration_to_training, function(x)
     -length(x))
 )) +
-  geom_bar(aes(fill = my_data$raw_data$completed$endurance_sport)) +
+  geom_bar(aes(fill = my_data$endurance_sport)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   xlab("Duration to training resumption") +
   labs(fill = "Endurance")
 ```
 
-## Training symptoms
-
 ```{r}
+covid_symp <-
+  my_data[, c(
+    "after_cough",
+    "after_fever",
+    "after_runny_nose",
+    "after_headache",
+    "after_sore_throat",
+    "after_tired",
+    "after_muscular_pain",
+    "after_vomiting",
+    "after_diarrhea",
+    "after_breathlessness",
+    "after_respiratory_difficulties"
+  )]
 mapply(
   FUN = function(my_column, my_colname) {
     ggplot(mapping = aes(x = my_column)) +
-      geom_bar(aes(fill = my_data$raw_data$completed$endurance_sport)) +
+      geom_bar(aes(fill = my_data[[my_var]])) +
+      geom_text(aes(label = ..count..), stat = "count", vjust = 2) +
+      ggtitle(my_colname) +
+      labs(fill = my_var)
+  },
+  my_column = covid_symp,
+  my_colname = colnames(covid_symp),
+  SIMPLIFY = FALSE
+) %>%
+  marrangeGrob(nrow = 2, ncol = 3)
+
+covid_symp <-
+  my_data[, c(
+    "training_tired",
+    "training_concentration_difficulties",
+    "training_muscular_pain",
+    "training_respiratory_difficulties"
+  )]
+mapply(
+  FUN = function(my_column, my_colname) {
+    ggplot(mapping = aes(x = my_column)) +
+      geom_bar(aes(fill = my_data$endurance_sport)) +
       geom_text(aes(label = ..count..), stat = "count", vjust = 2) +
       ggtitle(my_colname) +
       labs(fill = "Endurance")
   },
-  my_column = data_trans$training_symptoms,
-  my_colname = colnames(data_trans$training_symptoms),
+  my_column = covid_symp,
+  my_colname = colnames(covid_symp),
   SIMPLIFY = FALSE
-) %>% 
+) %>%
   marrangeGrob(nrow = 2, ncol = 2)
 
+covid_symp <-
+  my_data[, c(
+    "training_tired_note",
+    "training_concentration_difficulties_note",
+    "training_muscular_pain_note",
+    "training_respiratory_difficulties_note"
+  )]
 mapply(
   FUN = function(my_column, my_colname) {
     ggplot(mapping = aes(x = my_column)) +
@@ -187,28 +238,22 @@ mapply(
       ggtitle(my_colname) +
       labs(fill = "Endurance")
   },
-  my_column = data_trans$training_symptoms_notes,
-  my_colname = colnames(data_trans$training_symptoms_notes),
+  my_column = covid_symp,
+  my_colname = colnames(covid_symp),
   SIMPLIFY = FALSE
-) %>% 
+) %>%
   marrangeGrob(nrow = 2, ncol = 2)
 
-ggplot(data = my_data$raw_data$completed, aes(
+ggplot(data = my_data, aes(
   x = reorder(difficulties_duration, difficulties_duration, function(x)
     -length(x))
 )) +
   geom_bar() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   xlab("Difficulties duration at training")
 ```
 
-## Medication
+### Hypoxia training
 
-Needed?
-
-
-
-
-
-
+### Pathologies
 

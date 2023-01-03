@@ -1,0 +1,14 @@
+---
+title: "Untitled"
+output: html_document
+date: "2023-01-03"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+my_data <- .GlobalEnv$studied_populations$complete
+source("Scripts/Descriptive.R")
+my_results
+```
+
