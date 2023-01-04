@@ -16,7 +16,6 @@ require(psych)
 require(plyr)
 require(thinkr)
 require(tidyverse)
-require(maps)
 
 # Environment -------------------------------------------------------------
 # Load previously computed environment
@@ -31,6 +30,7 @@ rm(list = setdiff(
   )
 ))
 my_results <- lst()
+my_data <- my_population
 
 # Functions ---------------------------------------------------------------
 my_table <- function(input) {
@@ -41,7 +41,7 @@ my_var_counting <- function(input = my_data, my_vars) {
   lapply(
     X = my_vars,
     FUN = function(my_dataframe) {
-      count(my_data[my_dataframe]) %>%
+      count(input[[my_dataframe]]) %>%
         t() %>%
         row_to_names(row_number = 1) %>%
         as.data.frame() %>%
@@ -463,7 +463,8 @@ rm(list = setdiff(
     "my_results",
     "my_count",
     "var_count",
-    "my_table"
+    "my_table",
+    "my_population"
   )
 ))
 

@@ -10,6 +10,6 @@
 # Configuration -----------------------------------------------------------
 require(dplyr)
 
-studied_populations <-
-  lst(complete = my_data$raw_data$completed)
-      # all = my_data$raw_data$all)
+gen_env$studied_populations <-
+  lst(complete = my_data$raw_data$completed,
+      all = my_data$raw_data$all)

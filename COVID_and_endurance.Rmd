@@ -57,11 +57,11 @@ rm(list = setdiff(
     "var_count"
   )
 ))
-source("Scripts/Import.R")
-source("Scripts/Subset.R")
-my_data <- .GlobalEnv$studied_populations$complete
-my_var <- c("sex")
-source(file = "Scripts/Descriptive.R")
+# source("Scripts/Import.R")
+# source("Scripts/Subset.R")
+# my_data <- .GlobalEnv$studied_populations$complete
+# my_var <- c("sex")
+# source(file = "Scripts/Descriptive.R")
 ```
 
 # Population description
