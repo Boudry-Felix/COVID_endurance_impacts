@@ -6,10 +6,9 @@
 # License: Private
 # Description: Create different subset off data to study
 
-
 # Configuration -----------------------------------------------------------
-require(dplyr)
+require(tidyverse)
 
 gen_env$studied_populations <-
-  lst(complete = my_data$raw_data$completed,
-      all = my_data$raw_data$all)
+  lst(complete = my_data$raw_data$completed)
+      # all = my_data$raw_data$all)

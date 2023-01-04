@@ -8,11 +8,14 @@
 
 # Configuration -----------------------------------------------------------
 library(rmarkdown)
+library(tidyverse)
 
 # Sourcing ----------------------------------------------------------------
+rm(list = ls())
+gen_env <- new.env() # Create environment to store variables used in this script
 source(file = "Scripts/Import.R") # Import data
-gen_env <- new.env()
 source(file = "Scripts/Subset.R") # Create subset
+source(file = "Scripts/Functions.R")
 
 # Generate ----------------------------------------------------------------
 if (!dir.exists("Reports")) {
@@ -24,38 +27,37 @@ gen_env$categorical_vars <-
   # Select categorical variable to compare (COVID impact differences on
   # endurance athletes following those factors)
   c("sex",
-    # "age",
-    # "pathology",
-    # "endurance_training",
-    # "train_volume",
+    "age",
+    "pathology",
+    "endurance_training",
+    "train_volume",
     "train_method")
 
 gen_env$my_count <- 1
 for (my_population in gen_env$studied_populations) {
-  mapply(
-    FUN = function(my_var, var_name) {
+  lapply(
+    X = gen_env$categorical_vars,
+    FUN = function(my_var) {
       my_data <- my_population
+      gen_env$my_var <- my_var
       source("Scripts/Descriptive.R")
       render(
         input = "COVID_and_endurance.Rmd",
-        # input = "test.Rmd",
         output_dir = "Reports",
         output_file = paste(
           "COVID impact on endurance training for",
           names(gen_env$studied_populations[gen_env$my_count]),
           "results by",
-          var_name
+          my_var
         ),
         params = list(new_title = paste(
           "COVID impact on endurance training for",
           names(gen_env$studied_populations[gen_env$my_count]),
           "results by",
-          var_name
+          my_var
         ))
       )
-    },
-    my_var = gen_env$categorical_vars,
-    var_name = gen_env$categorical_vars
+    }
   )
   gen_env$my_count <- gen_env$my_count + 1
 }

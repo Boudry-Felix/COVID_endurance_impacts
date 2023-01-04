@@ -9,123 +9,30 @@
 # Configuration -----------------------------------------------------------
 
 ## Libraries --------------------------------------------------------------
+require(tidyverse)
 require(janitor)
-require(ggplot2)
-require(dplyr)
 require(psych)
 require(plyr)
 require(thinkr)
-require(tidyverse)
+require(gridExtra)
+require(kableExtra)
 
 # Environment -------------------------------------------------------------
 # Load previously computed environment
 rm(list = setdiff(
   x = ls(),
-  y = c(
-    "my_var",
-    "gen_env",
-    "studied_populations",
-    "my_population",
-    "my_data"
-  )
+  y = c(lsf.str(),
+        "my_var",
+        "gen_env",
+        "my_population",
+        "my_data")
 ))
 my_results <- lst()
 my_data <- my_population
 
-# Functions ---------------------------------------------------------------
-my_table <- function(input) {
-  kable(count(input)) %>%
-    kable_styling(bootstrap_options = c("striped"))
-}
-my_var_counting <- function(input = my_data, my_vars) {
-  lapply(
-    X = my_vars,
-    FUN = function(my_dataframe) {
-      count(input[[my_dataframe]]) %>%
-        t() %>%
-        row_to_names(row_number = 1) %>%
-        as.data.frame() %>%
-        clean_names()
-    }
-  )
-}
-bar_graph <- function(input,
-                      graph_xlab,
-                      graph_ylab,
-                      graph_title) {
-  ggplot(mapping = aes(x = input)) +
-    geom_bar() +
-    xlab(graph_xlab) +
-    ylab(graph_ylab) +
-    ggtitle(graph_title)
-}
-hist_plot <- function(input,
-                      graph_xlab,
-                      graph_ylab,
-                      graph_title) {
-  gplot(mapping = aes(x = input)) +
-    geom_histogram() +
-    xlab(graph_xlab) +
-    ylab(graph_ylab) +
-    ggtitle(graph_title)
-}
-hist_plot_multi <-
-  function(input,
-           my_colnames = antrop_measures,
-           graph_title,
-           my_stats = "count") {
-    lapply(
-      X = input,
-      FUN = function(my_dataframe) {
-        mapply(
-          FUN = function(my_column, my_colname) {
-            ggplot(
-              data = as.data.frame(my_column),
-              mapping = aes(x = my_column),
-              stat = my_stats
-            ) +
-              geom_histogram() +
-              xlab(my_colname) +
-              ggtitle(paste(graph_title , my_colname))
-          },
-          my_column = my_dataframe[, antrop_measures],
-          my_colname = antrop_measures,
-          SIMPLIFY = FALSE
-        )
-      }
-    )
-  }
-bar_plot_multi <-
-  function(input,
-           my_colnames = antrop_measures,
-           graph_title,
-           my_stats = "count") {
-    lapply(
-      X = input,
-      FUN = function(my_dataframe) {
-        mapply(
-          FUN = function(my_column, my_colname) {
-            ggplot(
-              data = as.data.frame(my_column),
-              mapping = aes(x = my_column),
-              stat = my_stats
-            ) +
-              geom_bar() +
-              xlab(my_colname) +
-              ggtitle(paste(graph_title , my_colname))
-          },
-          my_column = my_dataframe[, antrop_measures],
-          my_colname = antrop_measures,
-          SIMPLIFY = FALSE
-        )
-      }
-    )
-  }
+# Population description --------------------------------------------------
 
-# Antropometrics ----------------------------------------------------------
-
-## Values -----------------------------------------------------------------
-## Compute anthropometric and population values
+## Antropometrics ---------------------------------------------------------
 antrop_measures <- c("age", "height", "weight")
 population_var <-
   c("adult",
@@ -133,31 +40,33 @@ population_var <-
     "region",
     "profession")
 
-population_caracteristics <-
-  my_var_counting(my_vars = population_var)
-names(population_caracteristics) <- population_var
+### Values ----------------------------------------------------------------
+### Compute anthropometric and population values
 antrop_values <- describe(x = my_data) %>%
   t() %>%
   as.data.frame() %>%
   select(all_of(antrop_measures)) %>%
   round(digits = 2)
+population_values <-
+  my_var_counting(my_vars = population_var)
 
-results_antrop <- lst(population_caracteristics, antrop_values)
+results_antrop <- lst(antrop_values, population_values)
 
-## Plot -------------------------------------------------------------------
+### Plot ------------------------------------------------------------------
 antrop_plots <-
-  hist_plot_multi(input = my_data$encoded_data, graph_title = "Distribution of subjects")
-professions <- ggplot(mapping = aes(y = my_data$profession)) +
-  geom_bar() +
-  ylab(label = "Profession") +
-  ggtitle(label = "Subject's profession")
+  hist_plot_multi(input = my_data,
+                  my_columns = antrop_measures)
+population_plots <-
+  bar_plot_multi(
+    input = my_data,
+    my_columns = population_var,
+    graph_fill = FALSE
+  )
 
-plots_antrop <- lst(antrop_plots, professions)
+plots_antrop <- lst(antrop_plots, population_plots)
 
-# Training ----------------------------------------------------------------
-
-## Values -----------------------------------------------------------------
-my_training <-
+## Training ---------------------------------------------------------------
+training <-
   c(
     "endurance_sport",
     "federal_license",
@@ -167,75 +76,41 @@ my_training <-
     "train_method"
   )
 
-my_data$what_sport <-
-  gsub(pattern = ",.*$", replacement = "", my_data$what_sport) %>%
-  gsub(pattern = " \n.*$", replacement = "") %>%
-  gsub(pattern = "\\(.*$", replacement =  "") %>%
-  gsub(pattern = "/.*$", replacement = "") %>%
-  gsub(pattern = "-.*$", replacement = "") %>%
-  clean_vec() %>%
-  gsub(pattern = "_.*$", replacement = "") %>%
-  gsub(pattern = "athle.*$", replacement = "athletisme") %>%
-  gsub(pattern = "basket.*$", replacement = "basketball") %>%
-  gsub(pattern = "cycliste.*$", replacement = "cyclisme") %>%
-  gsub(pattern = "^le.*$", replacement = "na") %>%
-  gsub(pattern = "^la.*$", replacement = "na") %>%
-  gsub(pattern = "fff.*$", replacement = "football") %>%
-  gsub(pattern = "fftri.*$", replacement = "triathlon") %>%
-  gsub(pattern = "ffa.*$", replacement = "athletisme") %>%
-  gsub(pattern = "ffs.*$", replacement = "ski") %>%
-  gsub(pattern = "saut.*$", replacement = "athletisme") %>%
-  gsub(pattern = "lancer.*$", replacement = "athletisme") %>%
-  gsub(pattern = "sprint.*$", replacement = "athletisme") %>%
-  gsub(pattern = "x400.*$", replacement = "athletisme") %>%
-  gsub(pattern = "volley.*$", replacement = "volleyball") %>%
-  gsub(pattern = "foot.*$", replacement = "football") %>%
-  gsub(pattern = "demi.*$", replacement = "athletisme") %>%
-  gsub(pattern = "^na.*$", replacement = NA)
-  # na.omit()
+### Values ----------------------------------------------------------------
+training_values <- my_var_counting(my_vars = training)
 
-my_training_counts <- my_var_counting(my_vars = my_training)
-names(my_training_counts) <- my_training
+results_training <- lst(training_values)
 
-results_training <- lst(my_training_counts)
+### Plots -----------------------------------------------------------------
+training_plots <-
+  bar_plot_multi(input = my_data,
+                 my_columns = training,
+                 graph_fill = FALSE)
 
-## Plots ------------------------------------------------------------------
-endu <-
-  bar_graph(
-    input = my_data$endurance_sport,
-    graph_xlab = "Endurance trained",
-    graph_ylab = "Count",
-    graph_title = "Number of endurance trained and not trained subjects"
-  )
-fede <-
-  bar_graph(
-    input = my_data$federal_license,
-    graph_xlab = "Have a federal license",
-    graph_ylab = "Count",
-    graph_title = "Number of endurance trained and not trained subjects"
-  )
-sport <- ggplot(mapping = aes(y = my_data$what_sport)) +
-  geom_bar() +
-  ylab(label = "Sport") +
-  ggtitle(label = "Subject's sport")
-train_volume <- ggplot(mapping = aes(
-  x = reorder(my_data$train_volume, my_data$train_volume, function(x)
-    -length(x))
-)) +
-  geom_bar() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-train_sessions <- ggplot(mapping = aes(
-  x = reorder(my_data$train_sessions_week, my_data$train_sessions_week, function(x)
-    -length(x))
-)) +
-  geom_bar() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+plots_training <-
+  lst(training_plots)
 
-plots_training <- lst(endu, fede, sport, train_volume, train_sessions)
+## Pathologies ------------------------------------------------------------
+## Population pathologies statistics
+pathologies <-
+  c("pathology", "pathology_description", "pathology_medication")
+
+### Values ----------------------------------------------------------------
+pathologies_values <- my_var_counting(my_vars = pathologies)
+
+results_pathologies <- lst(pathologies_values)
+
+### Plots -----------------------------------------------------------------
+pathologies_plots <-
+  bar_plot_multi(input = my_data,
+                 my_columns = pathologies,
+                 graph_fill = FALSE)
+
+plots_pathologies <- lst(pathologies_plots)
 
 # COVID -------------------------------------------------------------------
 
-## Values -----------------------------------------------------------------
+## Infos ------------------------------------------------------------------
 covid_infos <-
   c(
     "covid_positive",
@@ -248,6 +123,20 @@ covid_infos <-
     "long_covid_diagnostic",
     "long_covid_supposed"
   )
+
+### Values ----------------------------------------------------------------
+covid_infos_values <- my_var_counting(my_vars = covid_infos)
+
+results_covid_infos <- lst(covid_infos_values)
+
+### Plots -----------------------------------------------------------------
+covid_infos_plots <-
+  bar_plot_multi(input = my_data,
+                 my_columns = covid_infos)
+
+plots_covid_infos <- lst(covid_infos_plots)
+
+## Symptoms ---------------------------------------------------------------
 covid_symptoms <-
   c(
     "cough",
@@ -264,31 +153,21 @@ covid_symptoms <-
     "other_symptoms"
   )
 
-covid_infos_counts <- my_var_counting(my_vars = covid_infos)
-my_covid_symptoms <- my_var_counting(my_vars = covid_symptoms)
+### Values ----------------------------------------------------------------
+covid_symptoms_values <- my_var_counting(my_vars = covid_symptoms)
 
-results_covid <- lst(covid_infos_counts, my_covid_symptoms)
+results_covid <- lst(covid_symptoms_values)
 
-## Plots ------------------------------------------------------------------
-# covid_symtoms <- mapply(
-#   FUN = function(my_column, my_colname) {
-#     ggplot(mapping = aes(x = my_column)) +
-#       geom_bar(aes(fill = my_data[[my_var]])) +
-#       geom_text(aes(label = after_stat(count)), stat = "count", vjust = 1) +
-#       ggtitle(my_colname) +
-#       labs(fill = my_var)
-#   },
-#   my_column = covid_symptoms,
-#   my_colname = colnames(covid_symptoms),
-#   SIMPLIFY = FALSE
-# ) %>%
-#   marrangeGrob(nrow = 2, ncol = 3)
+### Plots -----------------------------------------------------------------
+covid_symptoms_plots <-
+  bar_plot_multi(input = my_data,
+                 my_columns = covid_symptoms)
 
-plots_covid <- lst(covid_symptoms)
+plots_covid <- lst(covid_symptoms_plots)
 
 # Post COVID --------------------------------------------------------------
 
-## Values -----------------------------------------------------------------
+## Symptoms ---------------------------------------------------------------
 post_covid_infos <-
   c("after_symptoms", "restart_training", "duration_to_training")
 post_covid_symptoms <-
@@ -330,34 +209,54 @@ post_covid_difficulties <-
     "medication_duration"
   )
 
-post_covid_infos_counts <-
+### Values ----------------------------------------------------------------
+post_covid_infos_values <-
   my_var_counting(my_vars = post_covid_infos)
-
-post_covid_symptoms_counts <-
+post_covid_symptoms_values <-
   my_var_counting(my_vars = post_covid_symptoms)
-my_training_symptoms_counts <-
+training_symptoms_values <-
   my_var_counting(my_vars = training_symptoms)
-my_training_symptoms_notes_counts <-
+training_symptoms_notes_values <-
   my_var_counting(my_vars = training_symptoms_notes)
-post_covid_difficulties_counts <-
+post_covid_difficulties_values <-
   my_var_counting(my_vars = post_covid_difficulties)
 
 results_post_covid <-
   lst(
-    post_covid_infos,
-    post_covid_infos_counts,
-    my_training_symptoms_counts,
-    my_training_symptoms_notes_counts,
-    post_covid_difficulties_counts
+    post_covid_infos_values,
+    post_covid_infos_values,
+    training_symptoms_values,
+    training_symptoms_notes_values,
+    post_covid_difficulties_values
   )
 
-## Plots ------------------------------------------------------------------
+### Plots -----------------------------------------------------------------
+post_covid_infos_plots <-
+  bar_plot_multi(input = my_data,
+                 my_columns = post_covid_infos)
+post_covid_symptoms_plots <-
+  bar_plot_multi(input = my_data,
+                 my_columns = post_covid_symptoms)
+training_symptoms_plots <-
+  bar_plot_multi(input = my_data,
+                 my_columns = training_symptoms)
+training_symptoms_notes_plots <-
+  bar_plot_multi(input = my_data,
+                 my_columns = training_symptoms_notes)
+post_covid_difficulties_plots <-
+  bar_plot_multi(input = my_data,
+                 my_columns = post_covid_difficulties)
 
-plots_post_covid <- lst()
+plots_post_covid <-
+  lst(
+    post_covid_infos_plots,
+    post_covid_symptoms_plots,
+    training_symptoms_plots,
+    training_symptoms_notes_plots,
+    post_covid_difficulties_plots
+  )
 
-# Training difficulties ---------------------------------------------------
-
-## Values -----------------------------------------------------------------
+## Training difficulties --------------------------------------------------
 training_types <-
   c(
     "high_intensity_training",
@@ -375,21 +274,26 @@ training_difficulties <-
     "endurance_training_more_difficult"
   )
 
-my_training_types_counts <-
+### Values ----------------------------------------------------------------
+training_types_values <-
   my_var_counting(my_vars = training_types)
-my_training_difficulties_counts <-
+training_difficulties_values <-
   my_var_counting(my_vars = training_difficulties)
 
 results_train_diff <-
-  lst(my_training_types_counts, my_training_difficulties_counts)
+  lst(training_types_values, training_difficulties_values)
 
-## Plots ------------------------------------------------------------------
+### Plots -----------------------------------------------------------------
+training_types_plots <-
+  bar_plot_multi(input = my_data,
+                 my_columns = training_types)
+training_difficulties_plots <-
+  bar_plot_multi(input = my_data,
+                 my_columns = training_difficulties)
 
-plots_train_diff <- lst()
+plots_train_diff <- lst(training_types_plots, training_difficulties_plots)
 
-# Hypoxia -----------------------------------------------------------------
-
-## Values -----------------------------------------------------------------
+## Hypoxia ----------------------------------------------------------------
 hypoxia <-
   c(
     "hypoxia_training",
@@ -405,36 +309,16 @@ hypoxia <-
     "hypoxia_respiratory_difficulties_note"
   )
 
-my_hypoxia_counts <- my_var_counting(my_vars = hypoxia)
+### Values ----------------------------------------------------------------
+hypoxia_values <- my_var_counting(my_vars = hypoxia)
 
-results_hypoxia <- lst(my_hypoxia_counts)
+results_hypoxia <- lst(hypoxia_values)
 
-## Plots ------------------------------------------------------------------
+### Plots -----------------------------------------------------------------
+hypoxia_plots <-
+  bar_plot_multi(input = my_data, my_columns = hypoxia)
 
-plots_hypoxia <- lst()
-
-# Pathologies -------------------------------------------------------------
-# Population pathologies statistics
-
-## Values -----------------------------------------------------------------
-my_pathologies <-
-  c("pathology", "pathology_description", "pathology_medication")
-
-my_pathologies_counts <- my_var_counting(my_vars = my_pathologies)
-
-results_pathologies <- lst(my_pathologies_counts)
-
-## Plots ------------------------------------------------------------------
-my_data$pathology_description <- clean_vec(my_data$pathology_description) %>%
-  gsub(pattern = "na_.*", replacement = NA) %>%
-  gsub(pattern = "^na", replacement = NA) %>%
-  gsub(pattern = "_([0-9]).*$", replacement = "")
-patho_description <- ggplot(mapping = aes(x = my_data$pathology_description)) +
-  geom_bar() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-patho_medication <- ggplot(mapping = aes(na.omit(my_data$pathology_medication))) +
-  geom_bar()
-plots_pathologies <- lst(patho_description, patho_medication)
+plots_hypoxia <- lst(hypoxia_plots)
 
 # Structure ---------------------------------------------------------------
 # Structure data
@@ -457,13 +341,11 @@ my_results <- lst(num = my_results_num, plots = my_plots)
 rm(list = setdiff(
   ls(),
   c(
+    lsf.str(),
     "my_var",
     "gen_env",
     "my_data",
     "my_results",
-    "my_count",
-    "var_count",
-    "my_table",
     "my_population"
   )
 ))

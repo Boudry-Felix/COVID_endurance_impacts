@@ -10,21 +10,19 @@
 
 ## Libraries --------------------------------------------------------------
 ## List of used libraries.
-require(tibble)
 require(janitor)
 require(dplyr)
 require(CatEncoders)
 
 ## Global vectors ---------------------------------------------------------
 ## Define vectors used in entire script.
-rm(list = ls()) # Clean environment
+rm(list = setdiff(x = ls(), y = c("gen_env"))) # Clean environment
 my_data <- lst()
 
 # Import ------------------------------------------------------------------
 # Import data sets
 my_data_all <- read.csv(file = "Data/Answers_all.csv")
 my_data_completed <- read.csv(file = "Data/Answers_completed.csv")
-
 my_colnames <- read.csv(file = "Data/col_question.csv")
 
 # Format ------------------------------------------------------------------
@@ -69,7 +67,7 @@ convert_dic <-
 
 my_data <- lst(raw_data = my_data, encoded_data, convert_dic)
 
-rm(list = setdiff(ls(), c("my_data")))
+rm(list = setdiff(ls(), c("my_data", "gen_env")))
 
 # Export data -------------------------------------------------------------
 # Save environment data

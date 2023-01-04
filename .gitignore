@@ -41,5 +41,6 @@ vignettes/*.pdf
 # Personnal add
 Data/
 Env/
+Reports/
 *.html
 *.pdf
