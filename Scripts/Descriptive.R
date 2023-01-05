@@ -328,7 +328,6 @@ my_results_num <- sapply(
   simplify = FALSE,
   USE.NAMES = TRUE
 )
-
 my_plots <- sapply(
   X = ls(pattern = "plots_.*"),
   FUN = get,

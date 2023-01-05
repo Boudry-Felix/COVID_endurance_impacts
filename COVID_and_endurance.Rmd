@@ -30,7 +30,8 @@ knitr::opts_chunk$set(
 	echo = FALSE,
 	error = TRUE,
 	message = FALSE,
-	warning = FALSE
+	warning = FALSE,
+	fig.width = 12
 )
 # Import libraries
 require(tidyverse)
@@ -39,7 +40,7 @@ require(janitor)
 require(gridExtra)
 ```
 
-```{r Sourcing}
+```{r Configuration}
 rm(list = setdiff(
   x = ls(),
   y = c(
@@ -54,32 +55,40 @@ rm(list = setdiff(
 
 ## Anthropometrics
 
-Some anthropometric data about the population in this study:
+Presentation of the population studied.
 
 In the population kept in this study there are
 **`r my_results$num$results_antrop$population_values$sex$feminin`** womens and
 **`r my_results$num$results_antrop$population_values$sex$masculin`** mens and all of the
-**`r nrow(my_data)`** subjects (all) were infected by COVID-19.
+**`r nrow(my_data)`** subjects were infected by COVID-19.
 
-```{r}
+```{r Anthropometrics}
 my_table_count(input = my_data$covid_test, my_colnames = c("Tests", "freq"))
 my_table(input = my_results$num$results_antrop$antrop_values)
 my_results$plots$plots_antrop$antrop_plots %>%
-  marrangeGrob(ncol = 3, nrow = 1)
+  marrangeGrob(ncol = 3, nrow = 1, top = NULL)
+my_table(input = my_results$num$results_antrop$antrop_values)
 ```
 
 ## Training
 
 ```{r}
-my_results$plots$plots_training$training_plots %>% 
-marrangeGrob(nrow = 1,ncol = 2)
+my_results$plots$plots_training$training_plots[c("endurance_sport", "federal_license")] %>%
+  marrangeGrob(nrow = 1, ncol = 2, top = NULL)
+lapply(
+  X = my_results$plots$plots_training$training_plots[c("train_volume", "train_sessions_week", "train_method")],
+  FUN = function(x) {
+    x + theme(axis.text.x = element_text(angle = 45))
+  }
+) %>%
+  marrangeGrob(nrow = 1, ncol = 2, top = NULL)
+my_results$plots$plots_training$training_plots$what_sport +
+  theme(axis.text.x = element_text(angle = 45))
+my_results$num$results_training$training_values
 ```
 
 In the studied population, **`r my_results$num$results_training$training_values$endurance_sport$oui`** are endurance
 trained athletes.
-
-Various types of activities are done by the subjects. (potential errors during 
-computing!)
 
 ## Professions
 
@@ -87,15 +96,20 @@ Subject's professions are shown below:
 
 ```{r}
 my_results$plots$plots_antrop$population_plots$profession
+my_table(my_results$num$results_antrop$population_values$profession)
 ```
 
 ## Pathologies
 
-`r count(my_data$pathology)[2, 2]` have a known pathology.
+**`r count(my_data$pathology)[2, 2]`** have a known pathology.
 
 ```{r}
-my_results$plots$plots_pathologies$pathologies_plots$pathology_description
+my_results$plots$plots_pathologies$pathologies_plots$pathology_description +
+  theme(axis.text.x = element_text(angle = 45))
 my_results$plots$plots_pathologies$pathologies_plots$pathology_medication
+
+my_table(my_results$num$results_pathologies$pathologies_values$pathology_description)
+my_table(my_results$num$results_pathologies$pathologies_values$pathology_medication, caption = "Medication")
 ```
 
 # COVID impact on training
@@ -106,7 +120,7 @@ my_results$plots$plots_pathologies$pathologies_plots$pathology_medication
 
 ```{r}
 my_results$plots$plots_covid$covid_symptoms_plots %>% 
-  marrangeGrob(ncol = 2, nrow = 2)
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
 ```
 
 ## Post COVID
@@ -115,15 +129,15 @@ my_results$plots$plots_covid$covid_symptoms_plots %>%
 
 ```{r}
 my_results$plots$plots_post_covid$post_covid_infos_plots %>% 
-  marrangeGrob(ncol = 2, nrow = 2)
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
 my_results$plots$plots_post_covid$post_covid_symptoms_plots %>% 
-  marrangeGrob(ncol = 2, nrow = 2)
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
 my_results$plots$plots_post_covid$training_symptoms_plots %>% 
-  marrangeGrob(ncol = 2, nrow = 2)
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
 my_results$plots$plots_post_covid$training_symptoms_notes_plots %>% 
-  marrangeGrob(ncol = 2, nrow = 2)
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
 my_results$plots$plots_post_covid$post_covid_difficulties_plots %>% 
-  marrangeGrob(ncol = 2, nrow = 2)
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
 ```
 
 ### Training difficulties
@@ -132,6 +146,6 @@ my_results$plots$plots_post_covid$post_covid_difficulties_plots %>%
 
 ```{r}
 my_results$plots$plots_hypoxia$hypoxia_plots %>% 
-  marrangeGrob(ncol = 2, nrow = 2)
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
 ```
 

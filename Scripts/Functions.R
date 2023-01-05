@@ -1,11 +1,11 @@
 # Functions ---------------------------------------------------------------
 my_table_count <- function(input, my_colnames) {
   kable(x = count(df = input), col.names = my_colnames) %>%
-    kable_styling(bootstrap_options = c("striped"))
+    kable_styling(bootstrap_options = c("striped"), full_width = FALSE)
 }
-my_table <- function(input) {
-  kable(x = input) %>%
-    kable_styling(bootstrap_options = c("striped"))
+my_table <- function(input, ...) {
+  kable(x = input, ... = ...) %>%
+    kable_styling(bootstrap_options = c("striped"), full_width = FALSE)
 }
 my_var_counting <- function(input = my_data, my_vars) {
   lapply(
