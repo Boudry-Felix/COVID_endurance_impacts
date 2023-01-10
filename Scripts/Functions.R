@@ -1,3 +1,11 @@
+# Informations ------------------------------------------------------------
+
+# Title: Functions.R
+# Author: Félix Boudry
+# Contact: <felix.boudry@univ-perp.fr>
+# License: Private
+# Description: Functions used in COVID and endurance analysis.
+
 # Functions ---------------------------------------------------------------
 my_table_count <- function(input, my_colnames) {
   kable(x = count(df = input), col.names = my_colnames) %>%
@@ -46,19 +54,39 @@ bar_plot_multi <-
            my_columns,
            graph_title = "",
            my_stats = "count",
-           graph_fill = TRUE) {
+           graph_fill = TRUE,
+           factorize_val = FALSE) {
     mapply(
       FUN = function(my_dataset, my_colname) {
-        ggplot(
-          data = as.data.frame(my_dataset),
-          mapping = aes(x = my_dataset),
-          stat = my_stats
-        ) +
+        if (factorize_val) {
+          my_plot <- ggplot(
+            data = as.data.frame(my_dataset),
+            mapping = aes(x = as.factor(my_dataset)),
+            stat = my_stats
+          )
+        } else {
+          my_plot <- ggplot(
+            data = as.data.frame(my_dataset),
+            mapping = aes(x = my_dataset),
+            stat = my_stats
+          )
+        }
+        my_plot +
           geom_bar() +
-          {if (graph_fill) geom_bar(mapping = aes(fill = input[[gen_env$my_var]]))} +
-          {if (graph_fill) labs(fill = gen_env$my_var)} +
+          {
+            if (graph_fill)
+              geom_bar(mapping = aes(fill = input[[gen_env$my_var]]))
+          } +
+          {
+            if (graph_fill)
+              labs(fill = gen_env$my_var)
+          } +
           xlab(label = my_colname) +
-          ggtitle(label = paste(graph_title , my_colname))
+          ggtitle(label = paste(graph_title , my_colname)) +
+          geom_text(aes(label = after_stat(count)),
+                    vjust = -0.5,
+                    stat = "count") +
+          scale_x_discrete(na.translate = FALSE)
       },
       my_dataset = input[my_columns],
       my_colname = my_columns,

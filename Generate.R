@@ -18,9 +18,9 @@ source(file = "Scripts/Subset.R") # Create subset
 source(file = "Scripts/Functions.R")
 
 # Generate ----------------------------------------------------------------
-if (!dir.exists("Reports")) {
+if (!dir.exists(paths = "Reports")) {
   # Create "Reports" directory if not existing
-  dir.create("Reports")
+  dir.create(path = "Reports")
 }
 
 gen_env$categorical_vars <-
@@ -40,19 +40,20 @@ for (my_population in gen_env$studied_populations) {
     FUN = function(my_var) {
       my_data <- my_population
       gen_env$my_var <- my_var
-      source("Scripts/Descriptive.R")
+      source(file = "Scripts/Descriptive.R")
+      source(file = "Scripts/Statistics.R")
       render(
         input = "COVID_and_endurance.Rmd",
         output_dir = "Reports",
         output_file = paste(
           "COVID impact on endurance training for",
-          names(gen_env$studied_populations[gen_env$my_count]),
+          names(x = gen_env$studied_populations[gen_env$my_count]),
           "results by",
           my_var
         ),
         params = list(new_title = paste(
           "COVID impact on endurance training for",
-          names(gen_env$studied_populations[gen_env$my_count]),
+          names(x = gen_env$studied_populations[gen_env$my_count]),
           "results by",
           my_var
         ))

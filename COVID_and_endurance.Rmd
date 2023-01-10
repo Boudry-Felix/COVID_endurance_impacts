@@ -31,7 +31,8 @@ knitr::opts_chunk$set(
 	error = TRUE,
 	message = FALSE,
 	warning = FALSE,
-	fig.width = 12
+	fig.width = 12,
+	fig.height = 6
 )
 # Import libraries
 require(tidyverse)
@@ -67,7 +68,6 @@ my_table_count(input = my_data$covid_test, my_colnames = c("Tests", "freq"))
 my_table(input = my_results$num$results_antrop$antrop_values)
 my_results$plots$plots_antrop$antrop_plots %>%
   marrangeGrob(ncol = 3, nrow = 1, top = NULL)
-my_table(input = my_results$num$results_antrop$antrop_values)
 ```
 
 ## Training
@@ -78,13 +78,12 @@ my_results$plots$plots_training$training_plots[c("endurance_sport", "federal_lic
 lapply(
   X = my_results$plots$plots_training$training_plots[c("train_volume", "train_sessions_week", "train_method")],
   FUN = function(x) {
-    x + theme(axis.text.x = element_text(angle = 45))
+    x + theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
   }
 ) %>%
   marrangeGrob(nrow = 1, ncol = 2, top = NULL)
 my_results$plots$plots_training$training_plots$what_sport +
-  theme(axis.text.x = element_text(angle = 45))
-my_results$num$results_training$training_values
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
 ```
 
 In the studied population, **`r my_results$num$results_training$training_values$endurance_sport$oui`** are endurance
@@ -96,7 +95,6 @@ Subject's professions are shown below:
 
 ```{r}
 my_results$plots$plots_antrop$population_plots$profession
-my_table(my_results$num$results_antrop$population_values$profession)
 ```
 
 ## Pathologies
@@ -105,11 +103,8 @@ my_table(my_results$num$results_antrop$population_values$profession)
 
 ```{r}
 my_results$plots$plots_pathologies$pathologies_plots$pathology_description +
-  theme(axis.text.x = element_text(angle = 45))
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
 my_results$plots$plots_pathologies$pathologies_plots$pathology_medication
-
-my_table(my_results$num$results_pathologies$pathologies_values$pathology_description)
-my_table(my_results$num$results_pathologies$pathologies_values$pathology_medication, caption = "Medication")
 ```
 
 # COVID impact on training
@@ -128,24 +123,44 @@ my_results$plots$plots_covid$covid_symptoms_plots %>%
 ### Symptoms
 
 ```{r}
-my_results$plots$plots_post_covid$post_covid_infos_plots %>% 
+my_results$plots$plots_post_covid$post_covid_infos_plots[c("after_symptoms", "restart_training")] %>%
+  marrangeGrob(ncol = 2, nrow = 1, top = NULL)
+my_results$plots$plots_post_covid$post_covid_infos_plots$duration_to_training
+my_results$plots$plots_post_covid$post_covid_symptoms_plots %>%
   marrangeGrob(ncol = 2, nrow = 2, top = NULL)
-my_results$plots$plots_post_covid$post_covid_symptoms_plots %>% 
+my_results$plots$plots_post_covid$training_symptoms_plots %>%
   marrangeGrob(ncol = 2, nrow = 2, top = NULL)
-my_results$plots$plots_post_covid$training_symptoms_plots %>% 
+my_results$plots$plots_post_covid$training_symptoms_notes_plots %>%
   marrangeGrob(ncol = 2, nrow = 2, top = NULL)
-my_results$plots$plots_post_covid$training_symptoms_notes_plots %>% 
+my_results$plots$plots_post_covid$post_covid_difficulties_plots$difficulties_duration +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+my_results$plots$plots_post_covid$post_covid_difficulties_plots[-c(1, 6, 7)] %>%
   marrangeGrob(ncol = 2, nrow = 2, top = NULL)
-my_results$plots$plots_post_covid$post_covid_difficulties_plots %>% 
-  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+```
+
+```{r, fig.height=knitr::opts_chunk$get("fig.height")/2}
+my_results$plots$plots_post_covid$post_covid_difficulties_plots[c(6, 7)] %>%
+  marrangeGrob(ncol = 2, nrow = 1, top = NULL)
 ```
 
 ### Training difficulties
 
+```{r}
+
+```
+
 ### Hypoxia training
 
 ```{r}
-my_results$plots$plots_hypoxia$hypoxia_plots %>% 
+my_results$plots$plots_hypoxia$hypoxia_plots[-c(7, 9)] %>% 
   marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+```
+
+```{r fig.height=knitr::opts_chunk$get("fig.height")/2}
+# lapply(X = my_results$plots$plots_hypoxia$hypoxia_plots[c(7, 9)],  FUN = function(x) {
+#     x + theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+#   }
+# ) %>% 
+#   marrangeGrob(ncol = 2, nrow = 1, top = NULL)
 ```
 

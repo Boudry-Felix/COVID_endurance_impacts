@@ -242,7 +242,8 @@ training_symptoms_plots <-
                  my_columns = training_symptoms)
 training_symptoms_notes_plots <-
   bar_plot_multi(input = my_data,
-                 my_columns = training_symptoms_notes)
+                 my_columns = training_symptoms_notes,
+                 factorize_val = TRUE)
 post_covid_difficulties_plots <-
   bar_plot_multi(input = my_data,
                  my_columns = post_covid_difficulties)

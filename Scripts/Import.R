@@ -29,11 +29,12 @@ my_colnames <- read.csv(file = "Data/col_question.csv")
 # Formating data for analysis
 my_data <- # Put data in list and clean it
   list("all" = my_data_all, "completed" = my_data_completed) %>%
-  lapply(clean_names) %>%
-  lapply(remove_empty, which = c("rows", "cols"))
+  lapply(FUN = clean_names) %>%
+  lapply(FUN =  remove_empty, which = c("rows", "cols"))
 
 my_data <- # Change colnames from question to shorter name
-  lapply(X = my_data, FUN = `colnames<-`, my_colnames$col_name)
+  lapply(X = my_data,
+         FUN = `colnames<-`, my_colnames$col_name)
 
 # Encoding ----------------------------------------------------------------
 # Encode answers as labels
@@ -47,7 +48,7 @@ for (my_dataframe in my_data) {
     value = lapply(
       X = my_dataframe,
       FUN = function(my_col) {
-        if (is.numeric(my_col)) {
+        if (is.numeric(x = my_col)) {
           my_col
         } else {
           label <- LabelEncoder.fit(y = my_col)
@@ -67,11 +68,11 @@ convert_dic <-
 
 my_data <- lst(raw_data = my_data, encoded_data, convert_dic)
 
-rm(list = setdiff(ls(), c("my_data", "gen_env")))
+rm(list = setdiff(x = ls(), y = c("my_data", "gen_env")))
 
 # Export data -------------------------------------------------------------
 # Save environment data
-if (!dir.exists("Env")) {
-  dir.create("Env")
+if (!dir.exists(paths = "Env")) {
+  dir.create(path = "Env")
 }
 save.image(file = "Env/import.RData")
