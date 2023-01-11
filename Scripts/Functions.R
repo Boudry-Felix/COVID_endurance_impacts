@@ -84,9 +84,11 @@ bar_plot_multi <-
           xlab(label = my_colname) +
           ggtitle(label = paste(graph_title , my_colname)) +
           geom_text(aes(label = after_stat(count)),
-                    vjust = -0.5,
+                    position = position_dodge(width = 0.9),
+                    vjust = -0.1,
                     stat = "count") +
-          scale_x_discrete(na.translate = FALSE)
+          scale_x_discrete(na.translate = FALSE) +
+          scale_y_continuous(expand = c(0.05, 0))
       },
       my_dataset = input[my_columns],
       my_colname = my_columns,
