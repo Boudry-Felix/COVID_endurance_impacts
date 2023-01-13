@@ -1,0 +1,247 @@
+---
+params:
+  new_title: "My title"
+title: "`r params$new_title`"
+author: "Félix Boudry"
+date: "`r Sys.Date()`"
+documentclass: article
+classoption: oneside
+lang: en-US
+output:
+  html_document: 
+    toc: yes
+    number_section: yes
+    fig_caption: yes
+    number_sections: yes
+  word_document:
+    toc: yes
+    number_sections: 4
+    fig_caption: yes
+  pdf_document: 
+    toc: yes
+    toc_depth: 4
+    number_sections: yes
+    fig_caption: yes
+    df_print: kable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  error = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 12,
+  fig.height = 6
+)
+# Import libraries
+require(tidyverse)
+require(knitr)
+require(janitor)
+require(gridExtra)
+```
+
+```{r Configuration}
+rm(list = setdiff(
+  x = ls(),
+  y = c("my_var",
+        "gen_env",
+        "my_population")
+))
+```
+
+# Population description
+
+## Anthropometrics
+
+Presentation of the population studied.
+
+In the population kept in this study there are
+**`r my_results$num$results_antrop$population_values$sex$feminin`** womens and
+**`r my_results$num$results_antrop$population_values$sex$masculin`** mens and all of the
+**`r nrow(my_data)`** subjects were infected by COVID-19.
+
+```{r Anthropometrics}
+my_table_count(input = my_data$covid_test,
+               my_colnames = c("Tests", "freq"))
+my_table(input = my_results$num$results_antrop$antrop_values)
+my_results$plots$plots_antrop$antrop_plots %>%
+  marrangeGrob(ncol = 3, nrow = 1, top = NULL)
+```
+
+## Training
+
+```{r}
+my_results$plots$plots_training$training_plots[c("endurance_sport", "federal_license")] %>%
+  marrangeGrob(nrow = 1, ncol = 2, top = NULL)
+my_results$binary_proportions[c("endurance_sport", "federal_license")]
+lapply(
+  X = my_results$plots$plots_training$training_plots[c("train_volume", "train_sessions_week", "train_method")],
+  FUN = function(x) {
+    x + theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+  }
+) %>%
+  marrangeGrob(nrow = 1, ncol = 2, top = NULL)
+my_results$plots$plots_training$training_plots$what_sport +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+```
+
+In the studied population, **`r my_results$num$results_training$training_values$endurance_sport$oui`** are endurance
+trained athletes.
+
+## Professions
+
+Subject's professions are shown below:
+
+```{r}
+my_results$plots$plots_antrop$population_plots$profession
+```
+
+## Pathologies
+
+**`r count(my_data$pathology)[2, 2]`** have a known pathology.
+
+```{r}
+my_results$plots$plots_pathologies$pathologies_plots$pathology_description +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+my_results$plots$plots_pathologies$pathologies_plots$pathology_medication
+```
+
+# COVID impact on training
+
+## COVID
+
+### Symptoms
+
+```{r}
+my_results$plots$plots_covid$covid_symptoms_plots %>%
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+my_results$binary_proportions[c(
+  "cough",
+  "fever",
+  "runny_nose",
+  "headache",
+  "sore_throat",
+  "tired",
+  "muscular_pain",
+  "vomiting",
+  "diarrhea",
+  "breathlessness",
+  "respiratory_difficulties",
+  "other_symptoms"
+)]
+```
+
+## Post COVID
+
+### Symptoms
+
+```{r}
+my_results$plots$plots_post_covid$post_covid_infos_plots[c("after_symptoms", "restart_training")] %>%
+  marrangeGrob(ncol = 2, nrow = 1, top = NULL)
+my_results$binary_proportions[c("after_symptoms", "restart_training")]
+my_results$plots$plots_post_covid$post_covid_infos_plots$duration_to_training
+my_results$continuous_results$duration_to_training
+my_results$plots$plots_post_covid$post_covid_symptoms_plots %>%
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+my_results$binary_proportions[c(
+  "after_cough",
+  "after_fever",
+  "after_runny_nose",
+  "after_headache",
+  "after_sore_throat",
+  "after_tired",
+  "after_muscular_pain",
+  "after_vomiting",
+  "after_diarrhea",
+  "after_breathlessness",
+  "after_respiratory_difficulties"
+)]
+my_results$plots$plots_post_covid$training_symptoms_plots %>%
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+my_results$binary_proportions[c(
+  "training_tired",
+  "training_respiratory_difficulties",
+  "training_muscular_pain",
+  "training_concentration_difficulties"
+)]
+my_results$plots$plots_post_covid$training_symptoms_notes_plots %>%
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+my_results$continuous_results[c(
+  "training_tired_note",
+  "training_respiratory_difficulties_note",
+  "training_muscular_pain_note",
+  "training_concentration_difficulties_note"
+)]
+my_results$plots$plots_post_covid$post_covid_difficulties_plots$difficulties_duration +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+my_results$continuous_results$difficulties_duration
+my_results$plots$plots_post_covid$post_covid_difficulties_plots[-c(1, 6, 7)] %>%
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+my_results$binary_proportions[c(
+  "restart_training_medication",
+  "respiratory_medication",
+  "cortisone_medication",
+  "vitamin_medication"
+)]
+```
+
+```{r, fig.height=knitr::opts_chunk$get("fig.height")/2}
+my_results$plots$plots_post_covid$post_covid_difficulties_plots[c(6, 7)] %>%
+  marrangeGrob(ncol = 2, nrow = 1, top = NULL)
+my_results$binary_proportions$other_medication
+my_results$continuous_results$medication_duration
+```
+
+### Training difficulties
+
+```{r}
+my_results$plots$plots_train_diff$training_types_plots %>%
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+my_results$binary_proportions[c(
+  "high_intensity_training",
+  "force_training",
+  "endurance_training",
+  "intermittent_training",
+  "other_training"
+)]
+my_results$plots$plots_train_diff$training_difficulties_plots %>%
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+my_results$binary_proportions[c("longer_recuperation",
+                                "training_volume_back_normal")]
+my_results$continuous_results[c(
+  "modified_training_volume",
+  "time_to_normal_training_volume",
+  "endurance_training_more_difficult"
+)]
+```
+
+### Hypoxia training
+
+```{r}
+my_results$plots$plots_hypoxia$hypoxia_plots[-c(7, 9)] %>%
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+my_results$binary_proportions[c(
+  "hypoxia_training",
+  "after_hypoxia_training",
+  "500-2000_hypoxia",
+  "2000-3000_hypoxia",
+  "3000-5500_hypoxia",
+  "5500-more_hypoxia",
+  "hypoxia_difficulties",
+  "hypoxia_respiratory_difficulties"
+)]
+my_results$continuous_results$hypoxia_respiratory_difficulties_note
+```
+
+```{r fig.height=knitr::opts_chunk$get("fig.height")/2}
+lapply(
+  X = my_results$plots$plots_hypoxia$hypoxia_plots[c(7, 9)],
+  FUN = function(x) {
+    x + theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+  }
+) %>%
+  marrangeGrob(ncol = 2, nrow = 1, top = NULL)
+my_results$continuous_results$hypoxia_duration
+```
+

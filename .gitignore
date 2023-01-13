@@ -37,3 +37,10 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Personnal add
+Data/
+Env/
+Reports/
+*.html
+*.pdf
