@@ -117,7 +117,15 @@ continuous_answers <-
 binary_proportions <- lapply(
   X = binary_answers,
   FUN = function(my_param) {
-    prop.test(table(my_data[[my_param]], my_data[[gen_env$my_var]]), n = NULL, correct = FALSE)
+    compute_table <-
+      table(my_data[[my_param]], my_data[[gen_env$my_var]])
+    if (ncol(compute_table) == 2) {
+      prop.test(compute_table, n = NULL, correct = FALSE)
+    } else {
+      tmp_data <-
+        lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
+      anova(tmp_data)
+    }
   }
 ) %>% `names<-`(value = binary_answers)
 

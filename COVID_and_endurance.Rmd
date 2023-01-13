@@ -74,7 +74,7 @@ my_results$plots$plots_antrop$antrop_plots %>%
 ```{r}
 my_results$plots$plots_training$training_plots[c("endurance_sport", "federal_license")] %>%
   marrangeGrob(nrow = 1, ncol = 2, top = NULL)
-binary_proportions[c("endurance_sport", "federal_license")]
+my_results$binary_proportions[c("endurance_sport", "federal_license")]
 lapply(
   X = my_results$plots$plots_training$training_plots[c("train_volume", "train_sessions_week", "train_method")],
   FUN = function(x) {
