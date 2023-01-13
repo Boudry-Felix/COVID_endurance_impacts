@@ -62,3 +62,5 @@ for (my_population in gen_env$studied_populations) {
   )
   gen_env$my_count <- gen_env$my_count + 1
 }
+
+source(file = "Scripts/Profiling.R")

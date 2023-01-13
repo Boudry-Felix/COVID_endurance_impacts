@@ -9,6 +9,7 @@
 # Configuration -----------------------------------------------------------
 require(tidyverse)
 
+imported_data <- my_data
 gen_env$studied_populations <-
   lst(complete = my_data$raw_data$completed)
       # all = my_data$raw_data$all)

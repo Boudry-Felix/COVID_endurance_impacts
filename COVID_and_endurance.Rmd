@@ -44,7 +44,8 @@ require(gridExtra)
 ```{r Configuration}
 rm(list = setdiff(
   x = ls(),
-  y = c("my_var",
+  y = c("imported_data",
+        "my_var",
         "gen_env",
         "my_population")
 ))

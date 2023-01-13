@@ -12,6 +12,7 @@ rm(list = setdiff(
   x = ls(),
   y = c(
     lsf.str(),
+    "imported_data",
     "my_var",
     "gen_env",
     "my_population",
@@ -148,6 +149,7 @@ rm(list = setdiff(
   ls(),
   c(
     lsf.str(),
+    "imported_data",
     "my_var",
     "gen_env",
     "my_data",
