@@ -21,7 +21,8 @@ rm(list = setdiff(
         "my_var",
         "gen_env",
         "my_population",
-        "my_data")
+        "my_data",
+        "my_results")
 ))
 my_profiles <- lst()
 

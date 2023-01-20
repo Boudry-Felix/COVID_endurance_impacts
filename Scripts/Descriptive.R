@@ -29,7 +29,6 @@ rm(list = setdiff(
         "my_data")
 ))
 my_results <- lst()
-my_data <- my_population
 
 # Population description --------------------------------------------------
 
@@ -232,6 +231,14 @@ results_post_covid <-
   )
 
 ### Plots -----------------------------------------------------------------
+dtt2 <-
+  bar_plot_multi(input = my_data,
+                 my_columns = c("duration_to_training2"))
+
+diff_duration2 <-
+  bar_plot_multi(input = my_data,
+                 my_columns = c("difficulties_duration2"))
+
 post_covid_infos_plots <-
   bar_plot_multi(input = my_data,
                  my_columns = post_covid_infos)
@@ -255,7 +262,9 @@ plots_post_covid <-
     post_covid_symptoms_plots,
     training_symptoms_plots,
     training_symptoms_notes_plots,
-    post_covid_difficulties_plots
+    post_covid_difficulties_plots,
+    dtt2,
+    diff_duration2
   )
 
 ## Training difficulties --------------------------------------------------
@@ -286,6 +295,10 @@ results_train_diff <-
   lst(training_types_values, training_difficulties_values)
 
 ### Plots -----------------------------------------------------------------
+time_to_normal_training_volume2 <-
+  bar_plot_multi(input = my_data,
+                 my_columns = c("time_to_normal_training_volume2"))
+
 training_types_plots <-
   bar_plot_multi(input = my_data,
                  my_columns = training_types)
@@ -293,7 +306,7 @@ training_difficulties_plots <-
   bar_plot_multi(input = my_data,
                  my_columns = training_difficulties)
 
-plots_train_diff <- lst(training_types_plots, training_difficulties_plots)
+plots_train_diff <- lst(training_types_plots, training_difficulties_plots, time_to_normal_training_volume2)
 
 ## Hypoxia ----------------------------------------------------------------
 hypoxia <-

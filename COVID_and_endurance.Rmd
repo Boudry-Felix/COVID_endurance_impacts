@@ -143,6 +143,9 @@ my_results$plots$plots_post_covid$post_covid_infos_plots[c("after_symptoms", "re
 my_results$binary_proportions[c("after_symptoms", "restart_training")]
 my_results$plots$plots_post_covid$post_covid_infos_plots$duration_to_training
 my_results$continuous_results$duration_to_training
+my_results$plots$plots_post_covid$dtt2
+paste("Reprise immédiate et quelques jours après = court; le reste long")
+my_results$binary_proportions$duration_to_training2
 my_results$plots$plots_post_covid$post_covid_symptoms_plots %>%
   marrangeGrob(ncol = 2, nrow = 2, top = NULL)
 my_results$binary_proportions[c(
@@ -177,6 +180,9 @@ my_results$continuous_results[c(
 my_results$plots$plots_post_covid$post_covid_difficulties_plots$difficulties_duration +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
 my_results$continuous_results$difficulties_duration
+my_results$plots$plots_post_covid$diff_duration2
+paste("Aucun et 1 semaine = court et le reste = long")
+my_results$binary_proportions$difficulties_duration2
 my_results$plots$plots_post_covid$post_covid_difficulties_plots[-c(1, 6, 7)] %>%
   marrangeGrob(ncol = 2, nrow = 2, top = NULL)
 my_results$binary_proportions[c(
@@ -215,6 +221,9 @@ my_results$continuous_results[c(
   "time_to_normal_training_volume",
   "endurance_training_more_difficult"
 )]
+
+my_results$plots$plots_train_diff$time_to_normal_training_volume2
+my_results$binary_proportions$time_to_normal_training_volume2
 ```
 
 ### Hypoxia training

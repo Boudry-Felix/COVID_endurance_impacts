@@ -11,10 +11,12 @@ my_table_count <- function(input, my_colnames) {
   kable(x = count(df = input), col.names = my_colnames) %>%
     kable_styling(bootstrap_options = c("striped"), full_width = FALSE)
 }
+
 my_table <- function(input, ...) {
   kable(x = input, ... = ...) %>%
     kable_styling(bootstrap_options = c("striped"), full_width = FALSE)
 }
+
 my_var_counting <- function(input = my_data, my_vars) {
   lapply(
     X = my_vars,
@@ -28,6 +30,7 @@ my_var_counting <- function(input = my_data, my_vars) {
   ) %>%
     `names<-`(value = my_vars)
 }
+
 hist_plot_multi <-
   function(input,
            my_columns,
@@ -49,6 +52,7 @@ hist_plot_multi <-
       SIMPLIFY = FALSE
     )
   }
+
 bar_plot_multi <-
   function(input,
            my_columns,
@@ -58,10 +62,22 @@ bar_plot_multi <-
            factorize_val = FALSE) {
     mapply(
       FUN = function(my_dataset, my_colname) {
-        if (factorize_val) {
+        if (factorize_val & graph_fill == FALSE) {
           my_plot <- ggplot(
             data = as.data.frame(my_dataset),
             mapping = aes(x = as.factor(my_dataset)),
+            stat = my_stats
+          )
+        } else if (factorize_val & graph_fill) {
+          my_plot <- ggplot(
+            data = as.data.frame(my_dataset),
+            mapping = aes(x = as.factor(my_dataset), fill = input[[gen_env$my_var]]),
+            stat = my_stats
+          )
+        } else if (graph_fill & factorize_val == FALSE) {
+          my_plot <- ggplot(
+            data = as.data.frame(my_dataset),
+            mapping = aes(x = as.factor(my_dataset), fill = input[[gen_env$my_var]]),
             stat = my_stats
           )
         } else {
@@ -75,17 +91,12 @@ bar_plot_multi <-
           geom_bar() +
           {
             if (graph_fill)
-              geom_bar(mapping = aes(fill = input[[gen_env$my_var]]))
-          } +
-          {
-            if (graph_fill)
               labs(fill = gen_env$my_var)
           } +
           xlab(label = my_colname) +
           ggtitle(label = paste(graph_title , my_colname)) +
           geom_text(aes(label = after_stat(count)),
-                    position = position_dodge(width = 0.9),
-                    vjust = -0.1,
+                    position = position_stack(vjust = 0.5),
                     stat = "count") +
           scale_x_discrete(na.translate = FALSE) +
           scale_y_continuous(expand = c(0.05, 0))
@@ -94,5 +105,4 @@ bar_plot_multi <-
       my_colname = my_columns,
       SIMPLIFY = FALSE
     )
-
   }

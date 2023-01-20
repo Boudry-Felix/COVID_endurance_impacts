@@ -95,7 +95,10 @@ binary_answers <- c(
   "3000-5500_hypoxia",
   "5500-more_hypoxia",
   "hypoxia_difficulties",
-  "hypoxia_respiratory_difficulties"
+  "hypoxia_respiratory_difficulties",
+  "duration_to_training2",
+  "difficulties_duration2",
+  "time_to_normal_training_volume2"
 )
 continuous_answers <-
   c(

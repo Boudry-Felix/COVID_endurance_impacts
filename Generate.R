@@ -29,7 +29,7 @@ gen_env$categorical_vars <-
   c("sex",
     "age",
     "pathology",
-    "endurance_training",
+    "endurance_sport",
     "train_volume",
     "train_method")
 
@@ -38,8 +38,8 @@ for (my_population in gen_env$studied_populations) {
   lapply(
     X = gen_env$categorical_vars,
     FUN = function(my_var) {
-      my_data <- my_population
       gen_env$my_var <- my_var
+      source(file = "Scripts/Compute.R")
       source(file = "Scripts/Descriptive.R")
       source(file = "Scripts/Statistics.R")
       render(
