@@ -6,6 +6,11 @@
 # License: Private
 # Description: Basic statistics
 
+# Configuration -----------------------------------------------------------
+
+## Libraries --------------------------------------------------------------
+require(effectsize)
+
 # Environment -------------------------------------------------------------
 # Load previously computed environment
 rm(list = setdiff(
@@ -80,7 +85,7 @@ binary_answers <- c(
   "respiratory_medication",
   "cortisone_medication",
   "vitamin_medication",
-  "other_medication",
+  # "other_medication",
   "high_intensity_training",
   "force_training",
   "endurance_training",
@@ -118,6 +123,7 @@ continuous_answers <-
     "hypoxia_respiratory_difficulties_note"
   )
 
+# Proportions -------------------------------------------------------------
 binary_proportions <- lapply(
   X = binary_answers,
   FUN = function(my_param) {
@@ -142,11 +148,67 @@ continuous_results <- lapply(
   }
 ) %>% `names<-`(value = continuous_answers)
 
+# p values ----------------------------------------------------------------
+binary_proportions_p <- lapply(
+  X = binary_answers,
+  FUN = function(my_param) {
+    compute_table <-
+      table(my_data[[my_param]], my_data[[gen_env$my_var]])
+    if (ncol(compute_table) == 2) {
+      prop.test(compute_table, n = NULL, correct = FALSE)$p.value
+    } else {
+      tmp_data <-
+        lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
+      anova(tmp_data)$`Pr(>F)`[1]
+    }
+  }
+) %>% `names<-`(value = binary_answers)
+
+continuous_results_p <- lapply(
+  X = continuous_answers,
+  FUN = function(my_param) {
+    tmp_data <-
+      lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
+    anova(tmp_data)$`Pr(>F)`[1]
+  }
+) %>% `names<-`(value = continuous_answers)
+
+p_values <- binary_proportions_p %>% append(continuous_results_p)
+
+# Effect size -------------------------------------------------------------
+binary_proportions_eff <- lapply(
+  X = binary_answers,
+  FUN = function(my_param) {
+    compute_table <-
+      table(my_data[[my_param]], my_data[[gen_env$my_var]])
+    print(my_param)
+    if (ncol(compute_table) == 2 & nrow(compute_table) == 2) {
+      phi(my_data[[my_param]], my_data[[gen_env$my_var]])[1, 1]
+    } else {
+      tmp_data <-
+        lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
+      tmp_model <- anova(tmp_data)
+      eta_squared(tmp_model)
+    }
+  }
+) %>% `names<-`(value = binary_answers)
+
+continuous_results_eff <- lapply(
+  X = continuous_answers,
+  FUN = function(my_param) {
+    print(my_param)
+    tmp_data <-
+      lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
+    tmp_model <- anova(tmp_data)
+    eta_squared(tmp_model)
+  }
+) %>% `names<-`(value = continuous_answers)
+
+eff_values <- binary_proportions_eff %>% append(continuous_results_eff)
+
 # Structure ---------------------------------------------------------------
 # Structure data
-my_results <-
-  append(x = my_results,
-         values = lst(binary_proportions, continuous_results))
+my_results <- lst(binary_proportions, continuous_results, p_values, eff_values)
 
 rm(list = setdiff(
   ls(),

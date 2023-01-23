@@ -9,12 +9,14 @@
 # Functions ---------------------------------------------------------------
 my_table_count <- function(input, my_colnames) {
   kable(x = count(df = input), col.names = my_colnames) %>%
-    kable_styling(bootstrap_options = c("striped"), full_width = FALSE)
+    kable_styling(bootstrap_options = c("striped"),
+                  full_width = FALSE)
 }
 
 my_table <- function(input, ...) {
   kable(x = input, ... = ...) %>%
-    kable_styling(bootstrap_options = c("striped"), full_width = FALSE)
+    kable_styling(bootstrap_options = c("striped"),
+                  full_width = FALSE)
 }
 
 my_var_counting <- function(input = my_data, my_vars) {
@@ -94,12 +96,35 @@ bar_plot_multi <-
               labs(fill = gen_env$my_var)
           } +
           xlab(label = my_colname) +
-          ggtitle(label = paste(graph_title , my_colname)) +
-          geom_text(aes(label = after_stat(count)),
-                    position = position_stack(vjust = 0.5),
-                    stat = "count") +
+          ggtitle(label = paste(graph_title, my_colname)) +
+          geom_text(aes(label = paste0(
+            after_stat(count),
+            " / ",
+            round(
+              after_stat(count) * 100 / tapply(..count.., ..x.., sum)[as.character(..x..)],
+              digits = 1
+            ),
+            "%"
+          )),
+          position = position_stack(vjust = 0.5),
+          stat = "count") +
+          geom_text(
+            aes(
+              group = my_colname,
+              y = ..count..,
+              label = ..count..
+            ),
+            position = position_dodge(),
+            vjust = -0.5,
+            stat = "count"
+          ) +
           scale_x_discrete(na.translate = FALSE) +
-          scale_y_continuous(expand = c(0.05, 0))
+          scale_y_continuous(expand = expansion(add = c(10, 35))) +
+          labs(caption = paste("p-value = ", signif(
+            x = as.numeric(my_results$p_values[[my_colname]]), digits = 5
+          ),
+          "; eff size : ",
+          signif(x = as.numeric(my_results$eff_values[[my_colname]], digits = 5))))
       },
       my_dataset = input[my_columns],
       my_colname = my_columns,

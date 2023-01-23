@@ -223,6 +223,7 @@ my_results$continuous_results[c(
 )]
 
 my_results$plots$plots_train_diff$time_to_normal_training_volume2
+print("Jusqu'à 1 mois = court; le reste = long")
 my_results$binary_proportions$time_to_normal_training_volume2
 ```
 

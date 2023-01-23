@@ -40,8 +40,8 @@ for (my_population in gen_env$studied_populations) {
     FUN = function(my_var) {
       gen_env$my_var <- my_var
       source(file = "Scripts/Compute.R")
-      source(file = "Scripts/Descriptive.R")
       source(file = "Scripts/Statistics.R")
+      source(file = "Scripts/Descriptive.R")
       render(
         input = "COVID_and_endurance.Rmd",
         output_dir = "Reports",

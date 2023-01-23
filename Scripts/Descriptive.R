@@ -16,19 +16,22 @@ require(plyr)
 require(thinkr)
 require(gridExtra)
 require(kableExtra)
+require(ggpubr)
 
 # Environment -------------------------------------------------------------
 # Load previously computed environment
 rm(list = setdiff(
   x = ls(),
-  y = c(lsf.str(),
-        "imported_data",
-        "my_var",
-        "gen_env",
-        "my_population",
-        "my_data")
+  y = c(
+    lsf.str(),
+    "imported_data",
+    "my_var",
+    "gen_env",
+    "my_population",
+    "my_results",
+    "my_data"
+  )
 ))
-my_results <- lst()
 
 # Population description --------------------------------------------------
 
@@ -57,11 +60,9 @@ antrop_plots <-
   hist_plot_multi(input = my_data,
                   my_columns = antrop_measures)
 population_plots <-
-  bar_plot_multi(
-    input = my_data,
-    my_columns = population_var,
-    graph_fill = FALSE
-  )
+  bar_plot_multi(input = my_data,
+                 my_columns = population_var,
+                 graph_fill = FALSE)
 
 plots_antrop <- lst(antrop_plots, population_plots)
 
@@ -306,7 +307,12 @@ training_difficulties_plots <-
   bar_plot_multi(input = my_data,
                  my_columns = training_difficulties)
 
-plots_train_diff <- lst(training_types_plots, training_difficulties_plots, time_to_normal_training_volume2)
+plots_train_diff <-
+  lst(
+    training_types_plots,
+    training_difficulties_plots,
+    time_to_normal_training_volume2
+  )
 
 ## Hypoxia ----------------------------------------------------------------
 hypoxia <-
@@ -350,7 +356,9 @@ my_plots <- sapply(
   USE.NAMES = TRUE
 )
 
-my_results <- lst(num = my_results_num, plots = my_plots)
+my_results <-
+  append(x = my_results,
+         values = lst(num = my_results_num, plots = my_plots))
 
 rm(list = setdiff(
   ls(),
