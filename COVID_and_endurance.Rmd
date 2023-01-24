@@ -216,6 +216,30 @@ my_results$plots$plots_train_diff$training_difficulties_plots %>%
   marrangeGrob(ncol = 2, nrow = 2, top = NULL)
 my_results$binary_proportions[c("longer_recuperation",
                                 "training_volume_back_normal")]
+
+ggplot(
+  data = imported_data$raw_data$completed,
+  mapping = aes(
+    x = imported_data$raw_data$completed$endurance_sport,
+    fill = imported_data$raw_data$completed$longer_recuperation
+  )
+) +
+  geom_bar() +
+  labs(fill = "longer recuperation") +
+  geom_text(aes(label = after_stat(count)),
+                    position = position_stack(vjust = 0.5),
+                    stat = "count") +
+  ggtitle("population_recuperation") +
+  xlab("endurance sport")
+prop.test(
+  table(
+    imported_data$raw_data$completed$endurance_sport,
+    imported_data$raw_data$completed$longer_recuperation
+  ),
+  n = NULL,
+  correct = FALSE
+)
+
 my_results$continuous_results[c(
   "modified_training_volume",
   "time_to_normal_training_volume",
@@ -254,5 +278,11 @@ lapply(
 ) %>%
   marrangeGrob(ncol = 2, nrow = 1, top = NULL)
 my_results$continuous_results$hypoxia_duration
+```
+
+# Annexes
+
+```{r}
+my_table(imported_data$my_colnames)
 ```
 

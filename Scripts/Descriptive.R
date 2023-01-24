@@ -283,7 +283,8 @@ training_difficulties <-
     "modified_training_volume",
     "training_volume_back_normal",
     "time_to_normal_training_volume",
-    "endurance_training_more_difficult"
+    "endurance_training_more_difficult",
+    "train_vol_modif"
   )
 
 ### Values ----------------------------------------------------------------

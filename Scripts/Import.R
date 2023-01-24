@@ -66,7 +66,7 @@ encoded_data <-
 convert_dic <-
   list("all" = convert_dic_all, "completed" = convert_dic_completed)
 
-my_data <- lst(raw_data = my_data, encoded_data, convert_dic)
+my_data <- lst(raw_data = my_data, encoded_data, convert_dic, my_colnames)
 
 rm(list = setdiff(x = ls(), y = c("my_data", "gen_env")))
 

@@ -61,3 +61,18 @@ time_to_normal_training_volume2 <-
 
 my_data$time_to_normal_training_volume2 <-
   time_to_normal_training_volume2$time_to_normal_training_volume
+
+train_vol_modif <-
+  my_data[, c("endurance_sport", "modified_training_volume")]
+train_vol_modif <-
+  as.data.frame(sapply(train_vol_modif, function(x)
+    gsub(".*diminué.*", "diminished", x)))
+train_vol_modif <-
+  as.data.frame(sapply(train_vol_modif, function(x)
+    gsub(".*augmenté.*", "augmented/unchanged", x)))
+train_vol_modif <-
+  as.data.frame(sapply(train_vol_modif, function(x)
+    gsub(".*inchangé.*", "augmented/unchanged", x)))
+
+my_data$train_vol_modif <-
+  train_vol_modif$modified_training_volume

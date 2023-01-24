@@ -120,11 +120,13 @@ bar_plot_multi <-
           ) +
           scale_x_discrete(na.translate = FALSE) +
           scale_y_continuous(expand = expansion(add = c(10, 35))) +
-          labs(caption = paste("p-value = ", signif(
+          labs(caption = paste("p-value: ", signif(
             x = as.numeric(my_results$p_values[[my_colname]]), digits = 5
           ),
-          "; eff size : ",
-          signif(x = as.numeric(my_results$eff_values[[my_colname]], digits = 5))))
+          "; eff size: ",
+          signif(x = as.numeric(my_results$eff_values[[my_colname]], digits = 5)),
+          "; pwr: ",
+          signif(x = as.numeric(my_results$pwr_values[[my_colname]], digits = 5))))
       },
       my_dataset = input[my_columns],
       my_colname = my_columns,

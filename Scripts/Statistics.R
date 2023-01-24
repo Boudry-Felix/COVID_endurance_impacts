@@ -10,6 +10,7 @@
 
 ## Libraries --------------------------------------------------------------
 require(effectsize)
+require(pwr)
 
 # Environment -------------------------------------------------------------
 # Load previously computed environment
@@ -43,7 +44,6 @@ qualitative_answers <- c(
   "hypoxia_difficulties_detail"
 )
 binary_answers <- c(
-  "endurance_sport",
   "federal_license",
   "pathology",
   "pathology_medication",
@@ -103,7 +103,8 @@ binary_answers <- c(
   "hypoxia_respiratory_difficulties",
   "duration_to_training2",
   "difficulties_duration2",
-  "time_to_normal_training_volume2"
+  "time_to_normal_training_volume2",
+  "train_vol_modif"
 )
 continuous_answers <-
   c(
@@ -181,9 +182,8 @@ binary_proportions_eff <- lapply(
   FUN = function(my_param) {
     compute_table <-
       table(my_data[[my_param]], my_data[[gen_env$my_var]])
-    print(my_param)
     if (ncol(compute_table) == 2 & nrow(compute_table) == 2) {
-      phi(my_data[[my_param]], my_data[[gen_env$my_var]])[1, 1]
+      effectsize::phi(my_data[[my_param]], my_data[[gen_env$my_var]])[1, 1]
     } else {
       tmp_data <-
         lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
@@ -196,7 +196,6 @@ binary_proportions_eff <- lapply(
 continuous_results_eff <- lapply(
   X = continuous_answers,
   FUN = function(my_param) {
-    print(my_param)
     tmp_data <-
       lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
     tmp_model <- anova(tmp_data)
@@ -206,9 +205,50 @@ continuous_results_eff <- lapply(
 
 eff_values <- binary_proportions_eff %>% append(continuous_results_eff)
 
+# Power -------------------------------------------------------------------
+binary_proportions_pwr <- lapply(
+  X = binary_answers,
+  FUN = function(my_param) {
+    compute_table <-
+      table(my_data[[my_param]], my_data[[gen_env$my_var]])
+    if (ncol(compute_table) == 2 & nrow(compute_table) == 2) {
+      eff_size <- effectsize::phi(my_data[[my_param]], my_data[[gen_env$my_var]])[1, 1]
+      obs <- sum(compute_table)
+      freed <- as.numeric(prop.test(compute_table, n = NULL, correct = FALSE)[[2]])
+      return(pwr.chisq.test(w = eff_size, N = obs, df = freed, sig.level = 0.05)[5])
+    } else {
+      tmp_data <-
+        lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
+      tmp_model <- anova(tmp_data)
+      eff_size <- as.numeric(eta_squared(tmp_model))
+      obs <- ncol(compute_table)
+      # return(pwr.anova.test(k = 2, n = obs, f = eff_size))
+      return(NA)
+    }
+  }
+) %>% `names<-`(value = binary_answers)
+
+continuous_results_pwr <- lapply(
+  X = continuous_answers,
+  FUN = function(my_param) {
+    compute_table <-
+      table(my_data[[my_param]], my_data[[gen_env$my_var]])
+    tmp_data <-
+      lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
+    tmp_model <- anova(tmp_data)
+    eff_size <- as.numeric(eta_squared(tmp_model))
+    obs <- ncol(compute_table)
+    # return(pwr.anova.test(k = 2, n = obs, f = eff_size))
+    return(NA)
+  }
+) %>% `names<-`(value = continuous_answers)
+
+pwr_values <- binary_proportions_pwr %>% append(continuous_results_pwr)
+
+
 # Structure ---------------------------------------------------------------
 # Structure data
-my_results <- lst(binary_proportions, continuous_results, p_values, eff_values)
+my_results <- lst(binary_proportions, continuous_results, p_values, eff_values, pwr_values)
 
 rm(list = setdiff(
   ls(),
