@@ -1,5 +1,4 @@
 # Informations ------------------------------------------------------------
-
 # Title: Profiling.R
 # Author: Félix Boudry
 # Contact: <felix.boudry@univ-perp.fr>
@@ -9,28 +8,57 @@
 # Configuration -----------------------------------------------------------
 
 ## Libraries --------------------------------------------------------------
+require(tidyverse)
 require(DTWBI)
-require(tidyr)
 
 # Environment -------------------------------------------------------------
 # Load previously computed environment
 rm(list = setdiff(
   x = ls(),
-  y = c(lsf.str(),
-        "imported_data",
-        "my_var",
-        "gen_env",
-        "my_population",
-        "my_data",
-        "my_results")
+  y = c(
+    lsf.str(),
+    "gen_env",
+    "my_data",
+    "data_transformed",
+    "my_results"
+  )
 ))
+
 my_profiles <- lst()
+data_profiles <- data_transformed$encoded_data
+data_profiles <- data_profiles %>% select_if( ~ !any(is.na(.)))
+data_profiles_derived <- local.derivative.ddtw(data_profiles)
 
-my_data <- imported_data$encoded_data$completed
-my_data <- my_data %>% select_if(~ !any(is.na(.)))
-my_data_derived <- local.derivative.ddtw(my_data)
+matplot(t(data_profiles[-c(6, 7, 8, 9)]), type = 'l')
+matplot(t(data_profiles_derived[-c(6, 7, 8, 9)]), type = 'l')
 
-matplot(t(my_data[-c(6, 7, 8, 9)]), type = 'l')
-matplot(t(my_data_derived[-c(6, 7, 8, 9)]), type = 'l')
+chains <- unite(data = data_profiles[-c(1:12)], col = "chains", sep = "-")
 
-chains <- unite(my_data[-c(1:12)], col = "chains", sep = "-")
+plot_data <-
+  data_profiles[, -c(3, 7, 8, 9, 11, 12, 13, 14, 15, 65, 85)]
+plot_data <- plot_data %>%
+  rownames_to_column() %>%
+  gather(colname, value, -rowname)
+
+ggplot(plot_data) +
+  geom_tile(aes(x = colname, y = rowname, fill = factor(value)))
+
+ggplot(plot_data) +
+  geom_tile(aes(x = colname, y = rowname, fill = value))
+
+# Structure ---------------------------------------------------------------
+# Structure data
+rm(list = setdiff(
+  x = ls(),
+  y = c(
+    lsf.str(),
+    "gen_env",
+    "my_data",
+    "data_transformed",
+    "my_results"
+  )
+))
+
+# Export data -------------------------------------------------------------
+# Save environment data
+save.image(file = "Env/profiling.RData")

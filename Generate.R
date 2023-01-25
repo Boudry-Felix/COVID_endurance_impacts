@@ -1,5 +1,4 @@
 # Informations ------------------------------------------------------------
-
 # Title: Generate.R
 # Author: Félix Boudry
 # Contact: <felix.boudry@univ-perp.fr>
@@ -9,13 +8,23 @@
 # Configuration -----------------------------------------------------------
 library(rmarkdown)
 library(tidyverse)
+library(plyr)
+library(janitor)
+library(gridExtra)
+library(CatEncoders)
+library(psych)
+library(effectsize)
+library(pwr)
+library(kableExtra)
+library(DTWBI)
+library(stringi)
+source(file = "Scripts/Functions.R") # Import own functions
 
 # Sourcing ----------------------------------------------------------------
-rm(list = ls())
-gen_env <- new.env() # Create environment to store variables used in this script
+rm(list = setdiff(x = ls(), y = lsf.str()))
+gen_env <-
+  new.env() # Create environment to store variables used in this script
 source(file = "Scripts/Import.R") # Import data
-source(file = "Scripts/Subset.R") # Create subset
-source(file = "Scripts/Functions.R")
 
 # Generate ----------------------------------------------------------------
 if (!dir.exists(paths = "Reports")) {
@@ -23,27 +32,30 @@ if (!dir.exists(paths = "Reports")) {
   dir.create(path = "Reports")
 }
 
-gen_env$categorical_vars <-
-  # Select categorical variable to compare (COVID impact differences on
-  # endurance athletes following those factors)
-  c("sex",
-    "age",
-    "pathology",
-    "endurance_sport",
-    "train_volume",
-    "train_method")
+gen_env$studied_populations <-
+  gen_env$imported_data[c("complete")] # Select data
+gen_env$categorical_vars <- # Select categorical variable to compare
+  c(#"sex",
+    # "age",
+    # "pathology",
+    "endurance_sport")
+# "train_volume",
+# "train_method")
 
 gen_env$my_count <- 1
-for (my_population in gen_env$studied_populations) {
+for (my_data in gen_env$studied_populations) {
   lapply(
     X = gen_env$categorical_vars,
     FUN = function(my_var) {
-      gen_env$my_var <- my_var
-      source(file = "Scripts/Compute.R")
-      source(file = "Scripts/Statistics.R")
-      source(file = "Scripts/Descriptive.R")
+      gen_env$my_var <-
+        my_var # Store var in other environment for use in other scripts
+      source(file = "Scripts/Compute.R") # Compute new values and subset data
+      source(file = "Scripts/Statistics.R") # Does statistical analysis
+      source(file = "Scripts/Descriptive.R") # Does descriptive analysis
+      source(file = "Scripts/Profiling.R") # Does a chain/profile analysis
       render(
-        input = "COVID_and_endurance.Rmd",
+        # Create a report using the .Rmd template
+        input = "Report_template.Rmd",
         output_dir = "Reports",
         output_file = paste(
           "COVID impact on endurance training for",
@@ -51,16 +63,16 @@ for (my_population in gen_env$studied_populations) {
           "results by",
           my_var
         ),
-        params = list(new_title = paste(
-          "COVID impact on endurance training for",
-          names(x = gen_env$studied_populations[gen_env$my_count]),
-          "results by",
-          my_var
-        ))
+        params = list(
+          new_title = paste(
+            "COVID impact on endurance training for",
+            names(x = gen_env$studied_populations[gen_env$my_count]),
+            "results by",
+            my_var
+          )
+        )
       )
     }
   )
   gen_env$my_count <- gen_env$my_count + 1
 }
-
-source(file = "Scripts/Profiling.R")

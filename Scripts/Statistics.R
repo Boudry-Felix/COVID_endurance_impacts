@@ -1,5 +1,4 @@
 # Informations ------------------------------------------------------------
-
 # Title: Statistics.R
 # Author: Félix Boudry
 # Contact: <felix.boudry@univ-perp.fr>
@@ -9,8 +8,10 @@
 # Configuration -----------------------------------------------------------
 
 ## Libraries --------------------------------------------------------------
+require(tidyverse)
 require(effectsize)
 require(pwr)
+require(psych)
 
 # Environment -------------------------------------------------------------
 # Load previously computed environment
@@ -18,248 +19,51 @@ rm(list = setdiff(
   x = ls(),
   y = c(
     lsf.str(),
-    "imported_data",
-    "my_var",
     "gen_env",
-    "my_population",
     "my_data",
+    "data_transformed",
     "my_results"
   )
 ))
 
-quantitative_answers <- c("age", "height", "weight")
-qualitative_answers <- c(
-  "adult",
-  "sex",
-  "region",
-  "profession",
-  "what_sport",
-  "train_volume",
-  "train_sessions_week",
-  "train_method",
-  "pathology_description",
-  "covid_test",
-  "covid_date",
-  "covid_type",
-  "hypoxia_difficulties_detail"
-)
-binary_answers <- c(
-  "federal_license",
-  "pathology",
-  "pathology_medication",
-  "covid_positive",
-  "covid_multi",
-  "long_covid_diagnostic",
-  "long_covid_supposed",
-  "cough",
-  "fever",
-  "runny_nose",
-  "headache",
-  "sore_throat",
-  "tired",
-  "muscular_pain",
-  "vomiting",
-  "diarrhea",
-  "breathlessness",
-  "respiratory_difficulties",
-  "other_symptoms",
-  "after_symptoms",
-  "restart_training",
-  "after_cough",
-  "after_fever",
-  "after_runny_nose",
-  "after_headache",
-  "after_sore_throat",
-  "after_tired",
-  "after_muscular_pain",
-  "after_vomiting",
-  "after_diarrhea",
-  "after_breathlessness",
-  "after_respiratory_difficulties",
-  "training_tired",
-  "training_respiratory_difficulties",
-  "training_muscular_pain",
-  "training_concentration_difficulties",
-  "difficulties_duration",
-  "restart_training_medication",
-  "respiratory_medication",
-  "cortisone_medication",
-  "vitamin_medication",
-  # "other_medication",
-  "high_intensity_training",
-  "force_training",
-  "endurance_training",
-  "intermittent_training",
-  "other_training",
-  "longer_recuperation",
-  "training_volume_back_normal",
-  "hypoxia_training",
-  "after_hypoxia_training",
-  "500-2000_hypoxia",
-  "2000-3000_hypoxia",
-  "3000-5500_hypoxia",
-  "5500-more_hypoxia",
-  "hypoxia_difficulties",
-  "hypoxia_respiratory_difficulties",
-  "duration_to_training2",
-  "difficulties_duration2",
-  "time_to_normal_training_volume2",
-  "train_vol_modif"
-)
-continuous_answers <-
-  c(
-    "covid_duration",
-    "covid_how_much",
-    "duration_to_training",
-    "training_tired_note",
-    "training_respiratory_difficulties_note",
-    "training_muscular_pain_note",
-    "training_concentration_difficulties_note",
-    "difficulties_duration",
-    "medication_duration",
-    "modified_training_volume",
-    "time_to_normal_training_volume",
-    "endurance_training_more_difficult",
-    "hypoxia_duration",
-    "hypoxia_respiratory_difficulties_note"
-  )
-
-# Proportions -------------------------------------------------------------
-binary_proportions <- lapply(
-  X = binary_answers,
-  FUN = function(my_param) {
-    compute_table <-
-      table(my_data[[my_param]], my_data[[gen_env$my_var]])
-    if (ncol(compute_table) == 2) {
-      prop.test(compute_table, n = NULL, correct = FALSE)
+# Statistics --------------------------------------------------------------
+stat_results <- mapply(
+  FUN = function(my_columns, my_colnames) {
+    answer_profile <-
+      # Check number of possible answer to determine test
+      my_columns %>% unique() %>% na.omit() %>% length()
+    if (answer_profile < 2) {
+      return(NA)
+    } else if (answer_profile == 2) {
+      # Compute chi2 statistics
+      prop_stats(input = my_data,
+                 var1 = my_colnames,
+                 var2 = gen_env$my_var)
+    } else if (answer_profile > 2) {
+      # Compute ANOVA statistics
+      anova_stats(input = my_data,
+                  var1 = my_colnames,
+                  var2 = gen_env$my_var)
     } else {
-      tmp_data <-
-        lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
-      anova(tmp_data)
-    }
-  }
-) %>% `names<-`(value = binary_answers)
-
-continuous_results <- lapply(
-  X = continuous_answers,
-  FUN = function(my_param) {
-    tmp_data <-
-      lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
-    anova(tmp_data)
-  }
-) %>% `names<-`(value = continuous_answers)
-
-# p values ----------------------------------------------------------------
-binary_proportions_p <- lapply(
-  X = binary_answers,
-  FUN = function(my_param) {
-    compute_table <-
-      table(my_data[[my_param]], my_data[[gen_env$my_var]])
-    if (ncol(compute_table) == 2) {
-      prop.test(compute_table, n = NULL, correct = FALSE)$p.value
-    } else {
-      tmp_data <-
-        lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
-      anova(tmp_data)$`Pr(>F)`[1]
-    }
-  }
-) %>% `names<-`(value = binary_answers)
-
-continuous_results_p <- lapply(
-  X = continuous_answers,
-  FUN = function(my_param) {
-    tmp_data <-
-      lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
-    anova(tmp_data)$`Pr(>F)`[1]
-  }
-) %>% `names<-`(value = continuous_answers)
-
-p_values <- binary_proportions_p %>% append(continuous_results_p)
-
-# Effect size -------------------------------------------------------------
-binary_proportions_eff <- lapply(
-  X = binary_answers,
-  FUN = function(my_param) {
-    compute_table <-
-      table(my_data[[my_param]], my_data[[gen_env$my_var]])
-    if (ncol(compute_table) == 2 & nrow(compute_table) == 2) {
-      effectsize::phi(my_data[[my_param]], my_data[[gen_env$my_var]])[1, 1]
-    } else {
-      tmp_data <-
-        lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
-      tmp_model <- anova(tmp_data)
-      eta_squared(tmp_model)
-    }
-  }
-) %>% `names<-`(value = binary_answers)
-
-continuous_results_eff <- lapply(
-  X = continuous_answers,
-  FUN = function(my_param) {
-    tmp_data <-
-      lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
-    tmp_model <- anova(tmp_data)
-    eta_squared(tmp_model)
-  }
-) %>% `names<-`(value = continuous_answers)
-
-eff_values <- binary_proportions_eff %>% append(continuous_results_eff)
-
-# Power -------------------------------------------------------------------
-binary_proportions_pwr <- lapply(
-  X = binary_answers,
-  FUN = function(my_param) {
-    compute_table <-
-      table(my_data[[my_param]], my_data[[gen_env$my_var]])
-    if (ncol(compute_table) == 2 & nrow(compute_table) == 2) {
-      eff_size <- effectsize::phi(my_data[[my_param]], my_data[[gen_env$my_var]])[1, 1]
-      obs <- sum(compute_table)
-      freed <- as.numeric(prop.test(compute_table, n = NULL, correct = FALSE)[[2]])
-      return(pwr.chisq.test(w = eff_size, N = obs, df = freed, sig.level = 0.05)[5])
-    } else {
-      tmp_data <-
-        lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
-      tmp_model <- anova(tmp_data)
-      eff_size <- as.numeric(eta_squared(tmp_model))
-      obs <- ncol(compute_table)
-      # return(pwr.anova.test(k = 2, n = obs, f = eff_size))
       return(NA)
     }
-  }
-) %>% `names<-`(value = binary_answers)
-
-continuous_results_pwr <- lapply(
-  X = continuous_answers,
-  FUN = function(my_param) {
-    compute_table <-
-      table(my_data[[my_param]], my_data[[gen_env$my_var]])
-    tmp_data <-
-      lm(as.numeric(as.factor(my_data[[my_param]])) ~ my_data[[gen_env[["my_var"]]]])
-    tmp_model <- anova(tmp_data)
-    eff_size <- as.numeric(eta_squared(tmp_model))
-    obs <- ncol(compute_table)
-    # return(pwr.anova.test(k = 2, n = obs, f = eff_size))
-    return(NA)
-  }
-) %>% `names<-`(value = continuous_answers)
-
-pwr_values <- binary_proportions_pwr %>% append(continuous_results_pwr)
-
+  },
+  my_columns = my_data,
+  my_colnames = names(my_data)
+)
 
 # Structure ---------------------------------------------------------------
 # Structure data
-my_results <- lst(binary_proportions, continuous_results, p_values, eff_values, pwr_values)
+my_results <- lst(stat_results)
 
 rm(list = setdiff(
-  ls(),
-  c(
+  x = ls(),
+  y = c(
     lsf.str(),
-    "imported_data",
-    "my_var",
     "gen_env",
     "my_data",
-    "my_results",
-    "my_population"
+    "data_transformed",
+    "my_results"
   )
 ))
 

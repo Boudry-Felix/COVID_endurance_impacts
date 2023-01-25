@@ -1,5 +1,4 @@
 # Informations ------------------------------------------------------------
-
 # Title: Subset.R
 # Author: Félix Boudry
 # Contact: <felix.boudry@univ-perp.fr>
@@ -7,7 +6,7 @@
 # Description: Create different subset off data to study
 
 # Configuration -----------------------------------------------------------
-require(tidyverse)
+require(tibble)
 
 imported_data <- my_data
 gen_env$studied_populations <-

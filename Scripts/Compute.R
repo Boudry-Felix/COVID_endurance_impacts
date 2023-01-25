@@ -1,78 +1,77 @@
 # Informations ------------------------------------------------------------
-
 # Title: Compute.R
 # Author: Félix Boudry
 # Contact: <felix.boudry@univ-perp.fr>
 # License: Private
 # Description: Compute new values to analyze
 
-my_data <- my_population
+# Configuration -----------------------------------------------------------
+require(tibble)
+require(CatEncoders)
+require(stringi)
 
-duration_to_training2 <-
-  my_data[, c("endurance_sport", "duration_to_training")]
-duration_to_training2 <-
-  as.data.frame(sapply(duration_to_training2, function(x)
-    gsub("Reprise immédiate", "court", x)))
-duration_to_training2 <-
-  as.data.frame(sapply(duration_to_training2, function(x)
-    gsub("Quelques jours après", "court", x)))
-duration_to_training2 <-
-  as.data.frame(sapply(duration_to_training2, function(x)
-    gsub(".*mois.*", "long", x)))
-duration_to_training2 <-
-  as.data.frame(sapply(duration_to_training2, function(x)
-    gsub(".*semaine.*", "long", x)))
+# New values --------------------------------------------------------------
+# Compute new useful variables
+my_data$duration_to_training_binary <-
+  my_data$duration_to_training %>%
+  stri_replace_all_regex(
+    pattern = c(
+      "Reprise immédiate|Quelques jours après",
+      ".*mois.*|.*semaine.*"
+    ),
+    replacement = c("court", "long"),
+    vectorize_all = FALSE
+  )
 
-my_data$duration_to_training2 <-
-  duration_to_training2$duration_to_training
+my_data$difficulties_duration_binary <-
+  my_data$difficulties_duration %>%
+  stri_replace_all_regex(
+    pattern = c("Aucune|1 semaine",
+                ".*mois.*|.*semaine.*"),
+    replacement = c("court", "long"),
+    vectorize_all = FALSE
+  )
 
-difficulties_duration2 <-
-  my_data[, c("endurance_sport", "difficulties_duration")]
-difficulties_duration2 <-
-  as.data.frame(sapply(difficulties_duration2, function(x)
-    gsub("Aucune", "court", x)))
-difficulties_duration2 <-
-  as.data.frame(sapply(difficulties_duration2, function(x)
-    gsub("1 semaine", "court", x)))
-difficulties_duration2 <-
-  as.data.frame(sapply(difficulties_duration2, function(x)
-    gsub(".*mois.*", "long", x)))
-difficulties_duration2 <-
-  as.data.frame(sapply(difficulties_duration2, function(x)
-    gsub(".*semaine.*", "long", x)))
+my_data$time_to_normal_training_volume_binary <-
+  my_data$time_to_normal_training_volume %>%
+  stri_replace_all_regex(
+    pattern = c("1 semaine|1 moins",
+                ".*mois.*|.*semaine.*"),
+    replacement = c("court", "long"),
+    vectorize_all = FALSE
+  )
 
-my_data$difficulties_duration2 <-
-  difficulties_duration2$difficulties_duration
+my_data$modified_training_volume_binary <-
+  my_data$modified_training_volume %>%
+  stri_replace_all_regex(
+    pattern = c(".*diminué.*",
+                ".*augmenté.*|.*inchangé*"),
+    replacement = c("diminished", "augmented/unchanged"),
+    vectorize_all = FALSE
+  )
 
-time_to_normal_training_volume2 <-
-  my_data[, c("endurance_sport", "time_to_normal_training_volume")]
-time_to_normal_training_volume2 <-
-  as.data.frame(sapply(time_to_normal_training_volume2, function(x)
-    gsub("1 semaine", "court", x)))
-time_to_normal_training_volume2 <-
-  as.data.frame(sapply(time_to_normal_training_volume2, function(x)
-    gsub("1 mois", "court", x)))
-time_to_normal_training_volume2 <-
-  as.data.frame(sapply(time_to_normal_training_volume2, function(x)
-    gsub(".*mois.*", "long", x)))
-time_to_normal_training_volume2 <-
-  as.data.frame(sapply(time_to_normal_training_volume2, function(x)
-    gsub(".*semaine.*", "long", x)))
+my_data <- # Remove variable that can't be analyzed
+  subset(x = my_data,
+         select = -c(hypoxia_difficulties_detail, other_medication))
 
-my_data$time_to_normal_training_volume2 <-
-  time_to_normal_training_volume2$time_to_normal_training_volume
+# Encoding ----------------------------------------------------------------
+# Encode answers as labels
+data_transformed <-
+  df_encode(input = my_data) # Create a data set with labelled data
 
-train_vol_modif <-
-  my_data[, c("endurance_sport", "modified_training_volume")]
-train_vol_modif <-
-  as.data.frame(sapply(train_vol_modif, function(x)
-    gsub(".*diminué.*", "diminished", x)))
-train_vol_modif <-
-  as.data.frame(sapply(train_vol_modif, function(x)
-    gsub(".*augmenté.*", "augmented/unchanged", x)))
-train_vol_modif <-
-  as.data.frame(sapply(train_vol_modif, function(x)
-    gsub(".*inchangé.*", "augmented/unchanged", x)))
+# Structure ---------------------------------------------------------------
+# Structure data
+rm(list = setdiff(
+  x = ls(),
+  y = c(
+    lsf.str(),
+    "gen_env",
+    "my_data",
+    "data_transformed",
+    "my_results"
+  )
+))
 
-my_data$train_vol_modif <-
-  train_vol_modif$modified_training_volume
+# Export data -------------------------------------------------------------
+# Save environment data
+save.image(file = "Env/compute.RData")

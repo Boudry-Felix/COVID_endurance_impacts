@@ -1,12 +1,21 @@
 # Informations ------------------------------------------------------------
-
 # Title: Functions.R
 # Author: Félix Boudry
 # Contact: <felix.boudry@univ-perp.fr>
 # License: Private
 # Description: Functions used in COVID and endurance analysis.
 
-# Functions ---------------------------------------------------------------
+## Libraries --------------------------------------------------------------
+## List of used libraries.
+require(tidyverse)
+require(kableExtra)
+require(plyr)
+require(gridExtra)
+require(janitor)
+require(effectsize)
+
+# Tables ------------------------------------------------------------------
+# Functions used to print tables
 my_table_count <- function(input, my_colnames) {
   kable(x = count(df = input), col.names = my_colnames) %>%
     kable_styling(bootstrap_options = c("striped"),
@@ -19,6 +28,31 @@ my_table <- function(input, ...) {
                   full_width = FALSE)
 }
 
+# Data transformation -----------------------------------------------------
+# Functions that transform, recompute or re-encode data
+df_encode <- function(input = my_data, list_names) {
+  convert_dic <- lst()
+  encoded_data <- lapply(
+    X = input,
+    FUN = function(my_col) {
+      if (is.numeric(x = my_col)) {
+        my_col
+      } else {
+        label <- LabelEncoder.fit(y = my_col)
+        convert_dic <<- append(x = convert_dic, values = label)
+        transform(enc = label, my_col)
+      }
+    }
+  ) %>% as.data.frame()
+  output <- lst(convert_dic, encoded_data)
+  if (!missing(x = list_names)) {
+    names(output) <- list_names
+  }
+  return(output)
+}
+
+# Statistic computing -----------------------------------------------------
+# Functions to process data statistically
 my_var_counting <- function(input = my_data, my_vars) {
   lapply(
     X = my_vars,
@@ -33,6 +67,38 @@ my_var_counting <- function(input = my_data, my_vars) {
     `names<-`(value = my_vars)
 }
 
+prop_stats <- function(input = my_data, var1, var2) {
+  data_table <- table(my_data[[var1]], my_data[[var2]])
+  prop_result <- data_table %>%
+    prop.test(x = ., n = NULL, correct = FALSE)
+  p_value <- prop_result$p.value
+  effect_size <- phi(x = my_data[[var1]], y = my_data[[var2]])[1, 1]
+  my_power <- pwr.chisq.test(
+    w = effect_size,
+    N = sum(data_table),
+    df = as.numeric(prop_result[[2]]),
+    sig.level = 0.05
+  )[[5]]
+  return(lst(prop_result, p_value, effect_size, my_power))
+}
+
+anova_stats <- function(input = my_data, var1, var2) {
+  anova_results <-
+    lm(as.numeric(as.factor(input[[var1]])) ~ input[[var2]]) %>%
+    anova()
+  p_value <- anova_results[1, 5]
+  effect_size <- eta_squared(anova_results)[1, 2]
+  my_power <- pwr.anova.test(
+    k = input[[var1]] %>% unique %>% na.omit %>% length,
+    n = length(var2) + 1,
+    f = effect_size,
+    sig.level = 0.05
+  )[[5]]
+  return(lst(anova_results, p_value, effect_size, my_power))
+}
+
+# Plotting ----------------------------------------------------------------
+# Functions to plot data
 hist_plot_multi <-
   function(input,
            my_columns,
@@ -56,7 +122,7 @@ hist_plot_multi <-
   }
 
 bar_plot_multi <-
-  function(input,
+  function(input = my_data,
            my_columns,
            graph_title = "",
            my_stats = "count",
@@ -120,13 +186,14 @@ bar_plot_multi <-
           ) +
           scale_x_discrete(na.translate = FALSE) +
           scale_y_continuous(expand = expansion(add = c(10, 35))) +
-          labs(caption = paste("p-value: ", signif(
-            x = as.numeric(my_results$p_values[[my_colname]]), digits = 5
-          ),
-          "; eff size: ",
-          signif(x = as.numeric(my_results$eff_values[[my_colname]], digits = 5)),
-          "; pwr: ",
-          signif(x = as.numeric(my_results$pwr_values[[my_colname]], digits = 5))))
+          labs(caption = paste(
+            "p-value: ",
+            signif(x = as.numeric(my_results$stat_results[[my_colname]]["p_value"]), digits = 5),
+            "; eff size: ",
+            signif(x = as.numeric(my_results$stat_results[[my_colname]]["effect_size"], digits = 5)),
+            "; pwr: ",
+            signif(x = as.numeric(my_results$stat_results[[my_colname]]["my_power"], digits = 5))
+          ))
       },
       my_dataset = input[my_columns],
       my_colname = my_columns,
