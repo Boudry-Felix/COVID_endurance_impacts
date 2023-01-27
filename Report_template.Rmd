@@ -63,26 +63,20 @@ In the population kept in this study there are
 **`r nrow(my_data)`** subjects were infected by COVID-19.
 
 ```{r Anthropometrics}
-my_table_count(input = my_data$covid_test,
-               my_colnames = c("Tests", "freq"))
-my_table(input = my_results$num[c("age", "height", "weight")])
-my_results$plots[c("age", "height", "weight")] %>%
+my_data$covid_test %>% count() %>% my_table(col.names = c("Tests", "freq"))
+describe(my_data[c("age", "height", "weight")], skew = FALSE) %>%
+  round(digits = 1) %>% t() %>% my_table()
+hist_plot_multi(input = my_data,
+                my_columns = c("age", "height", "weight")) %>%
   marrangeGrob(ncol = 3, nrow = 1, top = NULL)
 ```
 
 ## Training
 
-```{r}
+```{r Training}
 my_results$plots[c("endurance_sport", "federal_license")] %>%
   marrangeGrob(nrow = 1, ncol = 2, top = NULL)
-my_results$stat_results[c("endurance_sport", "federal_license")]
-lapply(
-  X = my_results$plots[c("train_volume", "train_sessions_week", "train_method")],
-  FUN = function(x) {
-    x + theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
-  }
-) %>%
-  marrangeGrob(nrow = 1, ncol = 2, top = NULL)
+walk(my_results$plots[c("train_volume", "train_sessions_week", "train_method")], print)
 my_results$plots$what_sport +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
 ```
@@ -94,7 +88,7 @@ trained athletes.
 
 Subject's professions are shown below:
 
-```{r}
+```{r Professions}
 my_results$plots$profession
 ```
 
@@ -102,7 +96,7 @@ my_results$plots$profession
 
 **`r count(my_data$pathology)[2, 2]`** have a known pathology.
 
-```{r}
+```{r Pathologies}
 my_results$plots$pathology_description +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
 my_results$plots$pathology_medication
@@ -114,7 +108,7 @@ my_results$plots$pathology_medication
 
 ### Symptoms
 
-```{r}
+```{r COVID symptoms}
 my_results$plots[c(
   "cough",
   "fever",
@@ -130,38 +124,19 @@ my_results$plots[c(
   "other_symptoms"
 )] %>%
   marrangeGrob(ncol = 2, nrow = 2, top = NULL)
-my_results$stat_results[c(
-  "cough",
-  "fever",
-  "runny_nose",
-  "headache",
-  "sore_throat",
-  "tired",
-  "muscular_pain",
-  "vomiting",
-  "diarrhea",
-  "breathlessness",
-  "respiratory_difficulties",
-  "other_symptoms"
-)]
 ```
 
 ## Post COVID
 
 ### Symptoms
 
-```{r}
-my_results$plots[c("after_symptoms", "restart_training")] %>%
+```{r Post COVID symptoms}
+my_results$plots[c("after_symptoms", "duration_to_training_binary")] %>%
   marrangeGrob(ncol = 2, nrow = 1, top = NULL)
-my_results$stat_results[c("after_symptoms", "restart_training")]
+paste("Binary : Reprise immédiate et quelques jours après = court; le reste = long")
 my_results$plots$duration_to_training
-my_results$stat_results$duration_to_training
-my_results$plots$duration_to_training_binary
-paste("Reprise immédiate et quelques jours après = court; le reste long")
-my_results$stat_results$duration_to_training_binary
 my_results$plots[c(
   "after_cough",
-  "after_fever",
   "after_runny_nose",
   "after_headache",
   "after_sore_throat",
@@ -173,19 +148,11 @@ my_results$plots[c(
   "after_respiratory_difficulties"
 )] %>%
   marrangeGrob(ncol = 2, nrow = 2, top = NULL)
-my_results$stat_results[c(
-  "after_cough",
-  "after_fever",
-  "after_runny_nose",
-  "after_headache",
-  "after_sore_throat",
-  "after_tired",
-  "after_muscular_pain",
-  "after_vomiting",
-  "after_diarrhea",
-  "after_breathlessness",
-  "after_respiratory_difficulties"
-)]
+```
+
+### Impact during training
+
+```{r Post COVID impact}
 my_results$plots[c(
   "training_tired",
   "training_respiratory_difficulties",
@@ -193,55 +160,30 @@ my_results$plots[c(
   "training_concentration_difficulties"
 )] %>%
   marrangeGrob(ncol = 2, nrow = 2, top = NULL)
-my_results$stat_results[c(
-  "training_tired",
-  "training_respiratory_difficulties",
-  "training_muscular_pain",
-  "training_concentration_difficulties"
-)]
 my_results$plots[c(
   "training_tired_note",
   "training_respiratory_difficulties_note",
   "training_muscular_pain_note",
   "training_concentration_difficulties_note"
-)] %>%
-  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
-my_results$stat_results[c(
-  "training_tired_note",
-  "training_respiratory_difficulties_note",
-  "training_muscular_pain_note",
-  "training_concentration_difficulties_note"
-)]
+)] %>% walk(print)
 my_results$plots$difficulties_duration +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
-my_results$stat_results$difficulties_duration
 my_results$plots$difficulties_duration_binary
-paste("Aucun et 1 semaine = court et le reste = long")
-my_results$stat_results$difficulties_duration_binary
+paste("Binary : Aucun et 1 semaine = court et le reste = long")
+my_results$plots$difficulties_duration
 my_results$plots[c(
-  "difficulties_duration",
   "restart_training_medication",
   "respiratory_medication",
   "cortisone_medication",
   "vitamin_medication",
-  "other_medication",
   "medication_duration"
 )] %>%
   marrangeGrob(ncol = 2, nrow = 2, top = NULL)
-my_results$binary_proportions[c(
-  "difficulties_duration",
-  "restart_training_medication",
-  "respiratory_medication",
-  "cortisone_medication",
-  "vitamin_medication",
-  "other_medication",
-  "medication_duration"
-)]
 ```
 
 ### Training difficulties
 
-```{r}
+```{r Training difficulties}
 my_results$plots[c(
   "high_intensity_training",
   "force_training",
@@ -250,76 +192,56 @@ my_results$plots[c(
   "other_training"
 )] %>%
   marrangeGrob(ncol = 2, nrow = 2, top = NULL)
-my_results$stat_results[c(
-  "high_intensity_training",
-  "force_training",
-  "endurance_training",
-  "intermittent_training",
-  "other_training"
-)]
 my_results$plots[c(
   "longer_recuperation",
-  "modified_training_volume",
   "training_volume_back_normal",
-  "time_to_normal_training_volume",
-  "endurance_training_more_difficult",
-  "modified_training_volume_binary",
-  "time_to_normal_training_volume"
+  "modified_training_volume_binary"
 )] %>%
   marrangeGrob(ncol = 2, nrow = 2, top = NULL)
-print("Jusqu'à 1 mois = court; le reste = long")
-my_results$stat_results[c(
-  "longer_recuperation",
+paste("Binary : Jusqu'à 1 mois = court; le reste = long")
+my_results$plots[c(
   "modified_training_volume",
-  "training_volume_back_normal",
   "time_to_normal_training_volume",
-  "endurance_training_more_difficult",
-  "modified_training_volume_binary",
-  "time_to_normal_training_volume"
-)]
+  "endurance_training_more_difficult"
+)] %>% walk(print)
 ```
 
 ### Hypoxia training
 
-```{r}
+```{r Hypoxia training}
 my_results$plots[c(
   "hypoxia_training",
   "after_hypoxia_training",
   "500-2000_hypoxia",
   "2000-3000_hypoxia",
   "3000-5500_hypoxia",
-  "5500-more_hypoxia",
   "hypoxia_difficulties",
   "hypoxia_respiratory_difficulties"
 )] %>%
   marrangeGrob(ncol = 2, nrow = 2, top = NULL)
-my_results$stat_results[c(
-  "hypoxia_training",
-  "after_hypoxia_training",
-  "500-2000_hypoxia",
-  "2000-3000_hypoxia",
-  "3000-5500_hypoxia",
-  "5500-more_hypoxia",
-  "hypoxia_difficulties",
-  "hypoxia_respiratory_difficulties"
-)]
-my_results$stat_results$hypoxia_respiratory_difficulties_note
 ```
 
-```{r fig.height=knitr::opts_chunk$get("fig.height")/2}
-lapply(
-  X = my_results$plots$plots_hypoxia$hypoxia_plots[c(7, 9)],
-  FUN = function(x) {
-    x + theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
-  }
-) %>%
-  marrangeGrob(ncol = 2, nrow = 1, top = NULL)
-my_results$stat_results$hypoxia_duration
+# Answer profiles
+
+```{r Profiles}
+my_results$chains_plots$simple_chain_plot
+my_results$chains_plots$derived_chain_plot
+my_results$chains_plots$factor_tile_plot
+my_results$chains_plots$tile_plot
+my_results$chains_plots$chain_graph
+my_results$chains_plots$transition_plot
+my_results$chains_plots$sub_cost_plot
+my_results$chains_plots$dissim_plot
+my_results$chains_plots$clust_plot
 ```
 
 # Annexes
 
-```{r}
-my_table(gen_env$col_questions)
+```{r Annexes}
+questions <-
+  lapply(gen_env$col_questions,
+         gsub,
+         pattern = "_",
+         replacement = " ") %>% as.data.frame()
+my_table(questions)
 ```
-

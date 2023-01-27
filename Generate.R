@@ -18,6 +18,9 @@ library(pwr)
 library(kableExtra)
 library(DTWBI)
 library(stringi)
+library(TraMineR)
+library(reshape2)
+library(cluster)
 source(file = "Scripts/Functions.R") # Import own functions
 
 # Sourcing ----------------------------------------------------------------
@@ -35,12 +38,12 @@ if (!dir.exists(paths = "Reports")) {
 gen_env$studied_populations <-
   gen_env$imported_data[c("complete")] # Select data
 gen_env$categorical_vars <- # Select categorical variable to compare
-  c(#"sex",
-    # "age",
-    # "pathology",
-    "endurance_sport")
-# "train_volume",
-# "train_method")
+  c("sex",
+    "age",
+    "pathology",
+    "endurance_sport",
+    "train_volume",
+    "train_method")
 
 gen_env$my_count <- 1
 for (my_data in gen_env$studied_populations) {

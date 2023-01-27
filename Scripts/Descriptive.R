@@ -24,6 +24,8 @@ rm(list = setdiff(
   )
 ))
 
+# Simple descriptive analysis ---------------------------------------------
+# Analysis based on simple statistics and plots
 descriptive_results <- mapply(
   FUN = function(my_columns, my_colnames) {
     answer_profile <-
@@ -68,6 +70,7 @@ descriptive_values <- # Put all counts in a new list
   lapply(descriptive_results[!is.na(descriptive_results)], "[[", "my_count") %>%
   discard(is.null)
 
+# Structure ---------------------------------------------------------------
 my_results <-
   append(x = my_results,
          values = lst(num = descriptive_values, plots = descriptive_plots))

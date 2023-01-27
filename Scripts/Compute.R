@@ -44,8 +44,8 @@ my_data$time_to_normal_training_volume_binary <-
 my_data$modified_training_volume_binary <-
   my_data$modified_training_volume %>%
   stri_replace_all_regex(
-    pattern = c(".*diminué.*",
-                ".*augmenté.*|.*inchangé*"),
+    pattern = c(".*diminished.*",
+                ".*augmented.*|.*no*"),
     replacement = c("diminished", "augmented/unchanged"),
     vectorize_all = FALSE
   )

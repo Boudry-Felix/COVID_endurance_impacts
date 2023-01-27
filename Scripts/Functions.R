@@ -16,13 +16,8 @@ require(effectsize)
 
 # Tables ------------------------------------------------------------------
 # Functions used to print tables
-my_table_count <- function(input, my_colnames) {
-  kable(x = count(df = input), col.names = my_colnames) %>%
-    kable_styling(bootstrap_options = c("striped"),
-                  full_width = FALSE)
-}
-
 my_table <- function(input, ...) {
+  # Custom kable table
   kable(x = input, ... = ...) %>%
     kable_styling(bootstrap_options = c("striped"),
                   full_width = FALSE)
@@ -31,6 +26,7 @@ my_table <- function(input, ...) {
 # Data transformation -----------------------------------------------------
 # Functions that transform, recompute or re-encode data
 df_encode <- function(input = my_data, list_names) {
+  # Encode (labeling entire dataframes)
   convert_dic <- lst()
   encoded_data <- lapply(
     X = input,
@@ -87,7 +83,7 @@ anova_stats <- function(input = my_data, var1, var2) {
     lm(as.numeric(as.factor(input[[var1]])) ~ input[[var2]]) %>%
     anova()
   p_value <- anova_results[1, 5]
-  effect_size <- eta_squared(anova_results)[1, 2]
+  effect_size <- eta_squared(anova_results, partial = FALSE)[1, 2]
   my_power <- pwr.anova.test(
     k = input[[var1]] %>% unique %>% na.omit %>% length,
     n = length(var2) + 1,
@@ -188,7 +184,10 @@ bar_plot_multi <-
           scale_y_continuous(expand = expansion(add = c(10, 35))) +
           labs(caption = paste(
             "p-value: ",
-            signif(x = as.numeric(my_results$stat_results[[my_colname]]["p_value"]), digits = 5),
+            signif(
+              x = as.numeric(my_results$stat_results[[my_colname]]["p_value"]),
+              digits = 5
+            ),
             "; eff size: ",
             signif(x = as.numeric(my_results$stat_results[[my_colname]]["effect_size"], digits = 5)),
             "; pwr: ",

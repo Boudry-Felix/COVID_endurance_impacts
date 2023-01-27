@@ -25,12 +25,12 @@ imported_data_complete <-
 gen_env$col_questions <- read.csv(file = "Data/col_question.csv")
 
 # Format ------------------------------------------------------------------
-# Formating data for analysis
+# Formatting data for analysis
 imported_data <- # Put data in list and clean it
   list("complete" = imported_data_complete, "all" = imported_data_all) %>%
   lapply(FUN = clean_names) %>%
   lapply(FUN =  remove_empty, which = c("rows", "cols")) %>%
-  lapply(FUN = `colnames<-`, gen_env$col_questions$col_name) # Change colnames from question to shorter name
+  lapply(FUN = `colnames<-`, gen_env$col_questions$col_name) # Change column names from question to shorter name
 
 gen_env$imported_data <-
   imported_data # Store data in another environment
