@@ -14,3 +14,7 @@ There data will be analysed with several subcategories:
 - Training volume
 - Training modalities
 - Pathology
+
+Answers are analysed taking into account the previous mentioned groups.
+
+A sequence analysis is also performed to find and exploits answers profiles.

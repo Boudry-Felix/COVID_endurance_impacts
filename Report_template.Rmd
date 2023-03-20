@@ -1,0 +1,247 @@
+---
+params:
+  new_title: "My title"
+title: "`r params$new_title`"
+author: "Félix Boudry"
+date: "`r Sys.Date()`"
+documentclass: article
+classoption: oneside
+lang: en-US
+output:
+  html_document: 
+    toc: yes
+    number_section: yes
+    fig_caption: yes
+    number_sections: yes
+  word_document:
+    toc: yes
+    number_sections: 4
+    fig_caption: yes
+  pdf_document: 
+    toc: yes
+    toc_depth: 4
+    number_sections: yes
+    fig_caption: yes
+    df_print: kable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  error = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 12,
+  fig.height = 6
+)
+# Import libraries
+require(tidyverse)
+require(janitor)
+require(gridExtra)
+```
+
+```{r Configuration}
+rm(list = setdiff(
+  x = ls(),
+  y = c("imported_data",
+        "my_var",
+        "gen_env",
+        ".*data.*",
+        "my_population")
+))
+```
+
+# Population description
+
+## Anthropometrics
+
+Presentation of the population studied.
+
+In the population kept in this study there are
+**`r my_results$num$sex$feminin`** womens and
+**`r my_results$num$sex$masculin`** mens and all of the
+**`r nrow(my_data)`** subjects were infected by COVID-19.
+
+```{r Anthropometrics}
+my_data$covid_test %>% count() %>% my_table(col.names = c("Tests", "freq"))
+describe(my_data[c("age", "height", "weight")], skew = FALSE) %>%
+  round(digits = 1) %>% t() %>% my_table()
+hist_plot_multi(input = my_data,
+                my_columns = c("age", "height", "weight")) %>%
+  marrangeGrob(ncol = 3, nrow = 1, top = NULL)
+```
+
+## Training
+
+```{r Training}
+my_results$plots[c("endurance_sport", "federal_license")] %>%
+  marrangeGrob(nrow = 1, ncol = 2, top = NULL)
+walk(my_results$plots[c("train_volume", "train_sessions_week", "train_method")], print)
+my_results$plots$what_sport +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+```
+
+In the studied population, **`r my_results$num$endurance_sport$oui`** are endurance
+trained athletes.
+
+## Professions
+
+Subject's professions are shown below:
+
+```{r Professions}
+my_results$plots$profession
+```
+
+## Pathologies
+
+**`r count(my_data$pathology)[2, 2]`** have a known pathology.
+
+```{r Pathologies}
+my_results$plots$pathology_description +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+my_results$plots$pathology_medication
+```
+
+# COVID impact on training
+
+## COVID
+
+### Symptoms
+
+```{r COVID symptoms}
+my_results$plots[c(
+  "cough",
+  "fever",
+  "runny_nose",
+  "headache",
+  "sore_throat",
+  "tired",
+  "muscular_pain",
+  "vomiting",
+  "diarrhea",
+  "breathlessness",
+  "respiratory_difficulties",
+  "other_symptoms"
+)] %>%
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+```
+
+## Post COVID
+
+### Symptoms
+
+```{r Post COVID symptoms}
+my_results$plots[c("after_symptoms", "duration_to_training_binary")] %>%
+  marrangeGrob(ncol = 2, nrow = 1, top = NULL)
+paste("Binary : Reprise immédiate et quelques jours après = court; le reste = long")
+my_results$plots$duration_to_training
+my_results$plots[c(
+  "after_cough",
+  "after_runny_nose",
+  "after_headache",
+  "after_sore_throat",
+  "after_tired",
+  "after_muscular_pain",
+  "after_vomiting",
+  "after_diarrhea",
+  "after_breathlessness",
+  "after_respiratory_difficulties"
+)] %>%
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+```
+
+### Impact during training
+
+```{r Post COVID impact}
+my_results$plots[c(
+  "training_tired",
+  "training_respiratory_difficulties",
+  "training_muscular_pain",
+  "training_concentration_difficulties"
+)] %>%
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+my_results$plots[c(
+  "training_tired_note",
+  "training_respiratory_difficulties_note",
+  "training_muscular_pain_note",
+  "training_concentration_difficulties_note"
+)] %>% walk(print)
+my_results$plots$difficulties_duration +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+my_results$plots$difficulties_duration_binary
+paste("Binary : Aucun et 1 semaine = court et le reste = long")
+my_results$plots$difficulties_duration
+my_results$plots[c(
+  "restart_training_medication",
+  "respiratory_medication",
+  "cortisone_medication",
+  "vitamin_medication",
+  "medication_duration"
+)] %>%
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+```
+
+### Training difficulties
+
+```{r Training difficulties}
+my_results$plots[c(
+  "high_intensity_training",
+  "force_training",
+  "endurance_training",
+  "intermittent_training",
+  "other_training"
+)] %>%
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+my_results$plots[c(
+  "longer_recuperation",
+  "training_volume_back_normal",
+  "modified_training_volume_binary"
+)] %>%
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+paste("Binary : Jusqu'à 1 mois = court; le reste = long")
+my_results$plots[c(
+  "modified_training_volume",
+  "time_to_normal_training_volume",
+  "endurance_training_more_difficult"
+)] %>% walk(print)
+```
+
+### Hypoxia training
+
+```{r Hypoxia training}
+my_results$plots[c(
+  "hypoxia_training",
+  "after_hypoxia_training",
+  "500-2000_hypoxia",
+  "2000-3000_hypoxia",
+  "3000-5500_hypoxia",
+  "hypoxia_difficulties",
+  "hypoxia_respiratory_difficulties"
+)] %>%
+  marrangeGrob(ncol = 2, nrow = 2, top = NULL)
+```
+
+# Answer profiles
+
+```{r Profiles}
+my_results$chains_plots$simple_chain_plot
+my_results$chains_plots$derived_chain_plot
+my_results$chains_plots$factor_tile_plot
+my_results$chains_plots$tile_plot
+my_results$chains_plots$chain_graph
+my_results$chains_plots$transition_plot
+my_results$chains_plots$sub_cost_plot
+my_results$chains_plots$dissim_plot
+my_results$chains_plots$clust_plot
+```
+
+# Annexes
+
+```{r Annexes}
+questions <-
+  lapply(gen_env$col_questions,
+         gsub,
+         pattern = "_",
+         replacement = " ") %>% as.data.frame()
+my_table(questions)
+```
