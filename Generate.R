@@ -21,6 +21,9 @@ library(stringi)
 library(TraMineR)
 library(reshape2)
 library(cluster)
+library(dendextend)
+library(gtsummary)
+library(GGally)
 source(file = "Scripts/Functions.R") # Import own functions
 
 # Sourcing ----------------------------------------------------------------
@@ -38,24 +41,34 @@ if (!dir.exists(paths = "Reports")) {
 gen_env$studied_populations <-
   gen_env$imported_data[c("complete")] # Select data
 gen_env$categorical_vars <- # Select categorical variable to compare
-  c("sex",
-    "age",
-    "pathology",
-    "endurance_sport",
-    "train_volume",
-    "train_method")
+  c(#"sex",
+    #"age",
+    # "pathology",
+    "endurance_sport")
+#"train_volume",
+#"train_method")
 
 gen_env$my_count <- 1
+gen_env$studied_populations <-
+  lapply(
+    gen_env$studied_populations,
+    FUN = function(x) {
+      select(x,
+             -c(hypoxia_difficulties_detail,
+                other_medication))
+    }
+  )
 for (my_data in gen_env$studied_populations) {
+  my_results <- lst()
+  source(file = "Scripts/Compute.R") # Compute new values and subset data
+  source(file = "Scripts/Profiling.R") # Does a chain/profile analysis
   lapply(
     X = gen_env$categorical_vars,
     FUN = function(my_var) {
       gen_env$my_var <-
         my_var # Store var in other environment for use in other scripts
-      source(file = "Scripts/Compute.R") # Compute new values and subset data
       source(file = "Scripts/Statistics.R") # Does statistical analysis
       source(file = "Scripts/Descriptive.R") # Does descriptive analysis
-      source(file = "Scripts/Profiling.R") # Does a chain/profile analysis
       render(
         # Create a report using the .Rmd template
         input = "Report_template.Rmd",

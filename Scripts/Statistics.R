@@ -54,7 +54,7 @@ stat_results <- mapply(
 
 # Structure ---------------------------------------------------------------
 # Structure data
-my_results <- lst(stat_results)
+my_results <- append(x = my_results, values = lst(stat_results))
 
 rm(list = setdiff(
   x = ls(),

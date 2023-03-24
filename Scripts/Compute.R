@@ -50,10 +50,6 @@ my_data$modified_training_volume_binary <-
     vectorize_all = FALSE
   )
 
-my_data <- # Remove variable that can't be analyzed
-  subset(x = my_data,
-         select = -c(hypoxia_difficulties_detail, other_medication))
-
 # Encoding ----------------------------------------------------------------
 # Encode answers as labels
 data_transformed <-

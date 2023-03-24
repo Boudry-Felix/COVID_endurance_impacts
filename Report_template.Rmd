@@ -233,6 +233,7 @@ my_results$chains_plots$transition_plot
 my_results$chains_plots$sub_cost_plot
 my_results$chains_plots$dissim_plot
 my_results$chains_plots$clust_plot
+my_results$chains_plots$cluster_caract
 ```
 
 # Annexes
