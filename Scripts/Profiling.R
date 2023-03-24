@@ -13,6 +13,9 @@ require(DTWBI)
 require(TraMineR)
 require(reshape2)
 require(cluster)
+require(dendextend)
+require(gtsummary)
+require(GGally)
 
 # Environment -------------------------------------------------------------
 # Load previously computed environment
@@ -29,14 +32,47 @@ rm(list = setdiff(
 
 # Data structure ----------------------------------------------------------
 # Structure and select data to analyse chains answers
-# test <- lapply(my_data, unique) %>% lapply(length) %>% as.data.frame() %>% rbind(1:ncol(.))
-ignored_vars <- c(1, 3:9, 11, 15, 19, 53, 55, 57, 59)
 
 my_profiles <- lst()
 data_profiles <-
   data_transformed$encoded_data %>%
-  select_if( ~ !any(is.na(.))) %>%
-  select(-all_of(ignored_vars))
+  select_if(~ !any(is.na(.))) %>%
+  select(
+    -c(
+      adult,
+      profession,
+      age,
+      height,
+      weight,
+      pathology,
+      pathology_description,
+      pathology_medication,
+      region,
+      what_sport,
+      train_volume,
+      train_method,
+      train_sessions_week,
+      covid_positive,
+      covid_test,
+      covid_date,
+      covid_duration,
+      covid_type,
+      covid_how_much,
+      after_fever,
+      medication_duration,
+      restart_training,
+      # hypoxia_difficulties_detail,
+      hypoxia_duration,
+      difficulties_duration,
+      duration_to_training,
+      # other_medication,
+      time_to_normal_training_volume
+      # training_concentration_difficulties_note,
+      # training_muscular_pain_note,
+      # training_respiratory_difficulties_note,
+      # training_tired_notes
+    )
+  )
 data_profiles_derived <- local.derivative.ddtw(data_profiles)
 
 chains <-
@@ -112,6 +148,9 @@ dissim_cluster <-
 as.dendrogram(dissim_cluster) %>% plot(type = "rectangle")
 clust_plot <- recordPlot()
 
+my_data$clust <- cutree(dissim_cluster, k = 2)
+cluster_caract <- tbl_summary(my_data, by = clust)
+
 # Structure ---------------------------------------------------------------
 # Structure data
 chains_plots <-
@@ -124,7 +163,8 @@ chains_plots <-
     transition_plot,
     sub_cost_plot,
     dissim_plot,
-    clust_plot
+    clust_plot,
+    cluster_caract
   )
 my_results <- append(x = my_results, values = lst(chains_plots))
 

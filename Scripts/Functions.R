@@ -64,11 +64,11 @@ my_var_counting <- function(input = my_data, my_vars) {
 }
 
 prop_stats <- function(input = my_data, var1, var2) {
-  data_table <- table(my_data[[var1]], my_data[[var2]])
+  data_table <- table(input[[var1]], input[[var2]])
   prop_result <- data_table %>%
     prop.test(x = ., n = NULL, correct = FALSE)
   p_value <- prop_result$p.value
-  effect_size <- phi(x = my_data[[var1]], y = my_data[[var2]])[1, 1]
+  effect_size <- phi(x = input[[var1]], y = input[[var2]])[1, 1]
   my_power <- pwr.chisq.test(
     w = effect_size,
     N = sum(data_table),
