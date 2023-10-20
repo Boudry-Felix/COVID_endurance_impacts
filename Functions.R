@@ -66,7 +66,7 @@ my_var_counting <- function(input = my_data, my_vars) {
 prop_stats <- function(input = my_data, var1, var2) {
   data_table <- table(input[[var1]], input[[var2]])
   prop_result <- data_table %>%
-    prop.test(x = ., n = NULL, correct = FALSE)
+    fisher.test(x = .)
   p_value <- prop_result$p.value
   effect_size <- phi(x = input[[var1]], y = input[[var2]])[1, 1]
   my_power <- pwr.chisq.test(
@@ -135,13 +135,13 @@ bar_plot_multi <-
         } else if (factorize_val & graph_fill) {
           my_plot <- ggplot(
             data = as.data.frame(my_dataset),
-            mapping = aes(x = as.factor(my_dataset), fill = input[[gen_env$my_var]]),
+            mapping = aes(x = as.factor(my_dataset), fill = input[[my_var]]),
             stat = my_stats
           )
         } else if (graph_fill & factorize_val == FALSE) {
           my_plot <- ggplot(
             data = as.data.frame(my_dataset),
-            mapping = aes(x = as.factor(my_dataset), fill = input[[gen_env$my_var]]),
+            mapping = aes(x = as.factor(my_dataset), fill = input[[my_var]]),
             stat = my_stats
           )
         } else {
@@ -155,7 +155,7 @@ bar_plot_multi <-
           geom_bar() +
           {
             if (graph_fill)
-              labs(fill = gen_env$my_var)
+              labs(fill = my_var)
           } +
           xlab(label = my_colname) +
           ggtitle(label = paste(graph_title, my_colname)) +
@@ -185,13 +185,13 @@ bar_plot_multi <-
           labs(caption = paste(
             "p-value: ",
             signif(
-              x = as.numeric(my_results$stat_results[[my_colname]]["p_value"]),
+              x = as.numeric(stat_results[[my_colname]]["p_value"]),
               digits = 5
             ),
             "; eff size: ",
-            signif(x = as.numeric(my_results$stat_results[[my_colname]]["effect_size"], digits = 5)),
+            signif(x = as.numeric(stat_results[[my_colname]]["effect_size"], digits = 5)),
             "; pwr: ",
-            signif(x = as.numeric(my_results$stat_results[[my_colname]]["my_power"], digits = 5))
+            signif(x = as.numeric(stat_results[[my_colname]]["my_power"], digits = 5))
           ))
       },
       my_dataset = input[my_columns],
