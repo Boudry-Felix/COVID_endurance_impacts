@@ -5,15 +5,6 @@
 # License: Private
 # Description: Functions used in COVID and endurance analysis.
 
-## Libraries --------------------------------------------------------------
-## List of used libraries.
-require(tidyverse)
-require(kableExtra)
-require(plyr)
-require(gridExtra)
-require(janitor)
-require(effectsize)
-
 # Tables ------------------------------------------------------------------
 # Functions used to print tables
 my_table <- function(input, ...) {
@@ -53,7 +44,7 @@ my_var_counting <- function(input = my_data, my_vars) {
   lapply(
     X = my_vars,
     FUN = function(my_dataframe) {
-      count(df = input[[my_dataframe]]) %>%
+      plyr::count(df = input[[my_dataframe]]) %>%
         t() %>%
         janitor::row_to_names(row_number = 1) %>%
         as.data.frame() %>%
@@ -73,7 +64,7 @@ prop_stats <- function(input = my_data, var1, var2) {
   my_power <- pwr::pwr.chisq.test(
     w = effect_size,
     N = sum(data_table),
-    df = as.numeric(prop_result[[2]]),
+    df = 2,
     sig.level = 0.05
   )[[5]]
   return(dplyr::lst(prop_result, p_value, effect_size, my_power))
@@ -109,7 +100,7 @@ hist_plot_multi <-
           mapping = ggplot2::aes(x = my_dataset),
           stat = my_stats
         ) +
-          ggplot2::geom_histogram() +
+          ggplot2::geom_histogram(bins = 30) +
           ggplot2::xlab(label = my_colname) +
           ggplot2::ggtitle(label = paste(graph_title , my_colname))
       },
@@ -166,7 +157,7 @@ bar_plot_multi <-
               ggplot2::after_stat(count),
               " / ",
               round(
-                ggplot2::after_stat(count) * 100 / tapply(..count.., ..x.., sum)[as.character(..x..)],
+                ggplot2::after_stat(count) * 100 / tapply(after_stat(count), ..x.., sum)[as.character(..x..)],
                 digits = 1
               ),
               "%"
@@ -177,10 +168,10 @@ bar_plot_multi <-
           ggplot2::geom_text(
             ggplot2::aes(
               group = my_colname,
-              y = ..count..,
-              label = ..count..
+              y = after_stat(count),
+              label = after_stat(count)
             ),
-            position = ggplot2::position_dodge(),
+            position = ggplot2::position_dodge(width = 1),
             vjust = -0.5,
             stat = "count"
           ) +
