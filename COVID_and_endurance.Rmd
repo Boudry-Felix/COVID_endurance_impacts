@@ -102,7 +102,7 @@ stat_results <- mapply(
       return(NA)
     } else if (answer_profile == 2 && usable_table > 1) {
       # Compute chi2 statistics
-      prop_stats(input = analysis_data,
+      chi2_stats(input = analysis_data,
                  var1 = my_colnames,
                  var2 = my_var)
     } else if (answer_profile > 2 && usable_table > 1) {
@@ -119,7 +119,7 @@ stat_results <- mapply(
 )
 ```
 
-```{r Descriptive}
+```{r Description}
 # Analysis based on simple statistics and plots
 descriptive_results <- mapply(
   FUN = function(my_columns, my_colnames) {
@@ -132,25 +132,32 @@ descriptive_results <- mapply(
     if (answer_profile < 2 && usable_table < 2) {
       # Only count answer if no groups
       my_count <-
-        my_var_counting(input = analysis_data, my_vars = my_colnames) %>%
-        getElement(name = my_colnames)
+        occurrences(input = analysis_data, feature = my_colnames)
       return(lst(my_count))
     } else if (answer_profile == 2 && usable_table > 1) {
       # Optimized plots for double bar plots
       my_count <-
-        my_var_counting(input = analysis_data, my_vars = my_colnames) %>%
-        getElement(name = my_colnames)
+        occurrences(input = analysis_data, feature = my_colnames)
       my_plot <-
-        bar_plot_multi(input = analysis_data, my_columns = my_colnames) %>%
+        barplots(
+          input = analysis_data,
+          features = my_colnames,
+          fill_feature = my_var,
+          statistics_results = stat_results
+        ) %>%
         getElement(name = my_colnames)
       return(lst(my_count, my_plot))
     } else if (answer_profile > 2 && usable_table > 1) {
-      # Optimizes plots for multiple bar plots
+      # Optimized plots for multiple bar plots
       my_count <-
-        my_var_counting(input = analysis_data, my_vars = my_colnames) %>%
-        getElement(name = my_colnames)
+        occurrences(input = analysis_data, feature = my_colnames)
       my_plot <-
-        bar_plot_multi(input = analysis_data, my_columns = my_colnames) %>%
+        barplots(
+          input = analysis_data,
+          features = my_colnames,
+          fill_feature = my_var,
+          statistics_results = stat_results
+        ) %>%
         getElement(name = my_colnames)
       return(lst(my_count, my_plot))
     } else {
@@ -181,19 +188,25 @@ In the population kept in this study there are
 **`r nrow(analysis_data)`** subjects were infected by COVID-19.
 
 ```{r Anthropometrics}
-analysis_data$covid_test %>% count() %>% my_table(col.names = c("Tests", "freq"))
+analysis_data$covid_test %>%
+  count() %>%
+  my_table(col.names = c("Tests", "freq"))
 describe(analysis_data[c("age", "height", "weight")], skew = FALSE) %>%
   round(digits = 1) %>% t() %>% my_table()
-hist_plot_multi(input = analysis_data,
-                my_columns = c("age", "height", "weight")) %>%
-  ggarrange(plotlist = ., ncol = 3, nrow = 1)
+histograms(input = analysis_data,
+           features = c("age", "height", "weight")) %>%
+  ggarrange(plotlist = .,
+            ncol = 3,
+            nrow = 1)
 ```
 
 ## Training
 
 ```{r Training}
 descriptive_plots[c("endurance_sport", "federal_license")] %>%
-  ggarrange(plotlist = ., nrow = 1, ncol = 2)
+  ggarrange(plotlist = .,
+            nrow = 1,
+            ncol = 2)
 walk(descriptive_plots[c("train_volume", "train_sessions_week", "train_method")], print)
 descriptive_plots$what_sport +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
@@ -241,7 +254,9 @@ descriptive_plots[c(
   "respiratory_difficulties",
   "other_symptoms"
 )] %>%
-  ggarrange(plotlist = ., ncol = 2, nrow = 2) %>% 
+  ggarrange(plotlist = .,
+            ncol = 2,
+            nrow = 2) %>%
   walk(print)
 ```
 
@@ -253,7 +268,9 @@ Binary : Reprise immédiate et quelques jours après = court; le reste = long
 
 ```{r Post COVID symptoms}
 descriptive_plots[c("after_symptoms", "duration_to_training_binary")] %>%
-  ggarrange(plotlist = ., ncol = 2, nrow = 1)
+  ggarrange(plotlist = .,
+            ncol = 2,
+            nrow = 1)
 descriptive_plots$duration_to_training
 descriptive_plots[c(
   "after_cough",
@@ -267,7 +284,9 @@ descriptive_plots[c(
   "after_breathlessness",
   "after_respiratory_difficulties"
 )] %>%
-  ggarrange(plotlist = ., ncol = 2, nrow = 2) %>% 
+  ggarrange(plotlist = .,
+            ncol = 2,
+            nrow = 2) %>%
   walk(print)
 ```
 
@@ -280,7 +299,9 @@ descriptive_plots[c(
   "training_muscular_pain",
   "training_concentration_difficulties"
 )] %>%
-  ggarrange(plotlist = ., ncol = 2, nrow = 2)
+  ggarrange(plotlist = .,
+            ncol = 2,
+            nrow = 2)
 descriptive_plots[c(
   "training_tired_note",
   "training_respiratory_difficulties_note",
@@ -298,7 +319,9 @@ descriptive_plots[c(
   "vitamin_medication",
   "medication_duration"
 )] %>%
-  ggarrange(plotlist = ., ncol = 2, nrow = 2) %>% 
+  ggarrange(plotlist = .,
+            ncol = 2,
+            nrow = 2) %>%
   walk(print)
 ```
 
@@ -314,14 +337,18 @@ descriptive_plots[c(
   "intermittent_training",
   "other_training"
 )] %>%
-  ggarrange(plotlist = ., ncol = 2, nrow = 2) %>% 
+  ggarrange(plotlist = .,
+            ncol = 2,
+            nrow = 2) %>%
   walk(print)
 descriptive_plots[c(
   "longer_recuperation",
   "training_volume_back_normal",
   "modified_training_volume_binary"
 )] %>%
-  ggarrange(plotlist = ., ncol = 2, nrow = 2)
+  ggarrange(plotlist = .,
+            ncol = 2,
+            nrow = 2)
 descriptive_plots[c(
   "modified_training_volume",
   "time_to_normal_training_volume",
@@ -343,7 +370,9 @@ descriptive_plots[c(
   "hypoxia_difficulties",
   "hypoxia_respiratory_difficulties"
 )] %>%
-  ggarrange(plotlist = ., ncol = 2, nrow = 2) %>% 
+  ggarrange(plotlist = .,
+            ncol = 2,
+            nrow = 2) %>%
   walk(print)
 ```
 
@@ -468,7 +497,7 @@ as.dendrogram(dissim_cluster) %>% plot(type = "rectangle")
 clust_plot <- recordPlot()
 
 analysis_data$clust <- cutree(dissim_cluster, k = 2)
-cluster_caract <- tbl_summary(analysis_data, by = clust) %>% 
+cluster_caract <- tbl_summary(analysis_data, by = clust) %>%
   add_p()
 
 # Structure ---------------------------------------------------------------
