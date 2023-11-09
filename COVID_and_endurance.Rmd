@@ -50,28 +50,28 @@ analysis_data$duration_to_training_binary <-
   analysis_data$duration_to_training %>%
   stri_replace_all_regex(
     pattern = c(
-      "Reprise immédiate|Quelques jours après",
-      ".*mois.*|.*semaine.*"
+      "Immediately|A few days later",
+      ".*month.*|.*week.*"
     ),
-    replacement = c("court", "long"),
+    replacement = c("short", "long"),
     vectorize_all = FALSE
   )
 
 analysis_data$difficulties_duration_binary <-
   analysis_data$difficulties_duration %>%
   stri_replace_all_regex(
-    pattern = c("Aucune|1 semaine",
-                ".*mois.*|.*semaine.*"),
-    replacement = c("court", "long"),
+    pattern = c("Nothing|1 week",
+                ".*month.*|.*weeks.*"),
+    replacement = c("short", "long"),
     vectorize_all = FALSE
   )
 
 analysis_data$time_to_normal_training_volume_binary <-
   analysis_data$time_to_normal_training_volume %>%
   stri_replace_all_regex(
-    pattern = c("1 semaine|1 moins",
-                ".*mois.*|.*semaine.*"),
-    replacement = c("court", "long"),
+    pattern = c("1 week|1 month",
+                ".*months.*|.*weeks.*"),
+    replacement = c("short", "long"),
     vectorize_all = FALSE
   )
 
@@ -79,7 +79,7 @@ analysis_data$modified_training_volume_binary <-
   analysis_data$modified_training_volume %>%
   stri_replace_all_regex(
     pattern = c(".*diminished.*",
-                ".*augmented.*|.*no*"),
+                ".*augmented.*|.*No.*"),
     replacement = c("diminished", "augmented/unchanged"),
     vectorize_all = FALSE
   )
@@ -183,8 +183,8 @@ descriptive_values <- # Put all counts in a new list
 Presentation of the population studied.
 
 In the population kept in this study there are
-**`r descriptive_values$sex$feminin`** womens and
-**`r descriptive_values$sex$masculin`** mens and all of the
+**`r descriptive_values$sex$woman`** womens and
+**`r descriptive_values$sex$men`** mens and all of the
 **`r nrow(analysis_data)`** subjects were infected by COVID-19.
 
 ```{r Anthropometrics}
@@ -208,11 +208,10 @@ descriptive_plots[c("endurance_sport", "federal_license")] %>%
             nrow = 1,
             ncol = 2)
 walk(descriptive_plots[c("train_volume", "train_sessions_week", "train_method")], print)
-descriptive_plots$what_sport +
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+count(df = analysis_data$what_sport)
 ```
 
-In the studied population, **`r descriptive_values$endurance_sport$oui`** are endurance
+In the studied population, **`r descriptive_values$endurance_sport$yes`** are endurance
 trained athletes.
 
 ## Professions
@@ -220,7 +219,7 @@ trained athletes.
 Subject's professions are shown below:
 
 ```{r Professions}
-descriptive_plots$profession
+count(df = analysis_data$profession)
 ```
 
 ## Pathologies
@@ -228,12 +227,11 @@ descriptive_plots$profession
 **`r count(analysis_data$pathology)[2, 2]`** have a known pathology.
 
 ```{r Pathologies}
-descriptive_plots$pathology_description +
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+count(df = analysis_data$pathology_description)
 descriptive_plots$pathology_medication
 ```
 
-# COVID impact on training
+# Answers by groups
 
 ## COVID
 
@@ -264,7 +262,8 @@ descriptive_plots[c(
 
 ### Symptoms
 
-Binary : Reprise immédiate et quelques jours après = court; le reste = long
+Binary : Up to a few days later = "short"; others =
+"long"
 
 ```{r Post COVID symptoms}
 descriptive_plots[c("after_symptoms", "duration_to_training_binary")] %>%
@@ -325,7 +324,7 @@ descriptive_plots[c(
   walk(print)
 ```
 
-Binary : Aucun et 1 semaine = court et le reste = long
+Binary : Up to 1 week = "short", others = "long"
 
 ### Training difficulties
 
@@ -356,7 +355,7 @@ descriptive_plots[c(
 )] %>% walk(print)
 ```
 
-Binary : Jusqu'à 1 mois = court; le reste = long
+Binary : Up to 1 month = "short"; others = "long"
 
 ### Hypoxia training
 
@@ -364,9 +363,9 @@ Binary : Jusqu'à 1 mois = court; le reste = long
 descriptive_plots[c(
   "hypoxia_training",
   "after_hypoxia_training",
-  "500-2000_hypoxia",
-  "2000-3000_hypoxia",
-  "3000-5500_hypoxia",
+  "x500_2000_hypoxia",
+  "x2000_3000_hypoxia",
+  "x3000_5500_hypoxia",
   "hypoxia_difficulties",
   "hypoxia_respiratory_difficulties"
 )] %>%
@@ -378,12 +377,12 @@ descriptive_plots[c(
 
 # Answer profiles
 
-```{r Time series}
+```{r Answer profiles}
 my_profiles <- lst()
 data_profiles <-
   analysis_data_endcoded$encoded_data %>%
   select_if(~ !any(is.na(.))) %>%
-  select(
+  select(# Removing columns with open questions and values
     -c(
       adult,
       profession,
@@ -407,16 +406,10 @@ data_profiles <-
       after_fever,
       medication_duration,
       restart_training,
-      # hypoxia_difficulties_detail,
       hypoxia_duration,
       difficulties_duration,
       duration_to_training,
-      # other_medication,
       time_to_normal_training_volume
-      # training_concentration_difficulties_note,
-      # training_muscular_pain_note,
-      # training_respiratory_difficulties_note,
-      # training_tired_notes
     )
   )
 data_profiles_derived <- local.derivative.ddtw(data_profiles)
@@ -426,108 +419,78 @@ chains <-
   seqdef()
 ```
 
-```{r Time series plots}
-# Plots -------------------------------------------------------------------
-# Create chain plots
+```{r Answer profiles plots}
 matplot(t(data_profiles), type = 'l')
-simple_chain_plot <- recordPlot()
 matplot(t(data_profiles_derived), type = 'l')
-derived_chain_plot <- recordPlot()
 
-plot_data <-
-  data_profiles %>%
+data_profiles %>%
   rownames_to_column() %>%
-  gather(colname, value, -rowname)
-
-factor_tile_plot <- ggplot(plot_data) +
+  gather(colname, value, -rowname) %>%
+  ggplot() +
   geom_tile(aes(x = colname, y = rowname, fill = factor(value))) +
   scale_fill_brewer(palette = 10)
-factor_tile_plot
-
-tile_plot <- ggplot(plot_data) +
-  geom_tile(aes(x = colname, y = rowname, fill = value))
 
 seqIplot(chains)
-chain_graph <- recordPlot()
 
-my_transitions <-
-  seqtrate(seqdata = chains, sel.states = NULL) %>% round(digits = 2) %>% melt()
-
-transition_plot <- ggplot(my_transitions, aes(Var2, Var1)) +
+seqtrate(seqdata = chains, sel.states = NULL) %>%
+  round(digits = 2) %>%
+  melt() %>%
+  ggplot(aes(Var2, Var1)) +
   geom_tile(aes(fill = value)) +
   geom_text(aes(label = round(value, 2))) +
   scale_fill_continuous(high = "#132B43",
                         low = "#56B1F7",
                         name = "Transitions")
 
-sub_cost <-
-  seqsubm(chains, method = "TRATE") %>% round(digits = 2) %>% melt()
-
-sub_cost_plot <- ggplot(sub_cost, aes(Var2, Var1)) +
+seqsubm(chains, method = "TRATE") %>%
+  round(digits = 2) %>%
+  melt() %>%
+  ggplot(aes(Var2, Var1)) +
   geom_tile(aes(fill = value)) +
   geom_text(aes(label = round(value, 2))) +
   scale_fill_continuous(high = "#132B43",
                         low = "#56B1F7",
                         name = "Substitution rate")
 
-dissim <-
-  seqdist(
-    chains,
-    method = "OM",
-    sm = seqsubm(chains, method = "TRATE"),
-    indel = 1
-  ) %>% round(digits = 2) %>%  melt()
-
-dissim_plot <- ggplot(dissim, aes(Var2, Var1)) +
+seqdist(
+  chains,
+  method = "OM",
+  sm = seqsubm(chains, method = "TRATE"),
+  indel = 1
+) %>%
+  round(digits = 2) %>%
+  melt() %>%
+  ggplot(aes(Var2, Var1)) +
   geom_tile(aes(fill = value)) +
   # geom_text(aes(label = round(value, 2))) +
   scale_fill_continuous(high = "#132B43",
                         low = "#56B1F7",
                         name = "Dissimilarities")
 
-dissim_cluster <-
-  seqdist(
-    chains,
-    method = "OM",
-    sm = seqsubm(chains, method = "TRATE"),
-    indel = 1
-  ) %>% agnes(diss = TRUE, method = "ward")
-
-as.dendrogram(dissim_cluster) %>% plot(type = "rectangle")
-clust_plot <- recordPlot()
-
-analysis_data$clust <- cutree(dissim_cluster, k = 2)
-cluster_caract <- tbl_summary(analysis_data, by = clust) %>%
-  add_p()
-
-# Structure ---------------------------------------------------------------
-# Structure data
-chains_plots <-
-  lst(
-    simple_chain_plot,
-    derived_chain_plot,
-    factor_tile_plot,
-    tile_plot,
-    chain_graph,
-    transition_plot,
-    sub_cost_plot,
-    dissim_plot,
-    clust_plot,
-    cluster_caract
-  )
+seqdist(
+  chains,
+  method = "OM",
+  sm = seqsubm(chains, method = "TRATE"),
+  indel = 1
+) %>%
+  agnes(diss = TRUE, method = "ward") %>%
+  as.dendrogram() %>%
+  plot(type = "rectangle")
 ```
 
-```{r Profiles}
-chains_plots$simple_chain_plot
-chains_plots$derived_chain_plot
-chains_plots$factor_tile_plot
-chains_plots$tile_plot
-chains_plots$chain_graph
-chains_plots$transition_plot
-chains_plots$sub_cost_plot
-chains_plots$dissim_plot
-chains_plots$clust_plot
-chains_plots$cluster_caract
+# Unsupervised learning
+
+```{r Unsupervised learning}
+analysis_data$clust <- seqdist(
+  chains,
+  method = "OM",
+  sm = seqsubm(chains, method = "TRATE"),
+  indel = 1
+) %>%
+  agnes(diss = TRUE, method = "ward") %>%
+  cutree(k = 2)
+tbl_summary(data = analysis_data, by = clust) %>%
+  add_p()
 ```
 
 # Annexes
