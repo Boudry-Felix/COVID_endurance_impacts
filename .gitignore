@@ -39,8 +39,7 @@ vignettes/*.pdf
 .Renviron
 
 # Personnal add
-Data/
-Env/
+Data
 Reports/
 *.html
 *.pdf
