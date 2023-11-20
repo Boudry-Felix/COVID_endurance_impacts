@@ -323,7 +323,11 @@ symptoms_plot <-
   ) +
   labs(fill = "Practice an endurance sport") +
   ggtitle("Symptoms by population (END vs. NEND)") +
-  scale_fill_manual(values = c("darkgrey", "lightgrey"))
+  scale_fill_manual(
+    name = "",
+    labels = c("NEND", "END"),
+    values = c("darkgrey", "lightgrey")
+  )
 ```
 
 # Population description

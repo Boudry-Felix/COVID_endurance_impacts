@@ -167,7 +167,7 @@ barplots <-
             if (graph_fill)
               ggplot2::labs(fill = col_questions[col_questions$col_name == fill_feature, "plot_name"])
           } +
-          ggplot2::xlab(label = my_feature) +
+          ggplot2::xlab(label = paste(col_questions[col_questions$col_name == my_feature, "plot_name"])) +
           ggplot2::ggtitle(label = paste(col_questions[col_questions$col_name == my_feature, "plot_name"])) +
           # Adding descriptive values on bar plots
           ggplot2::geom_text(
@@ -207,7 +207,11 @@ barplots <-
             "; pwr: ",
             signif(x = as.numeric(my_power), digits = 5)
           )) +
-          scale_fill_manual(values = c("darkgrey", "lightgrey"))
+          scale_fill_manual(
+            name = "",
+            labels = c("NEND", "END"),
+            values = c("darkgrey", "lightgrey")
+          )
       },
       my_dataset = input[features],
       my_feature = features,
