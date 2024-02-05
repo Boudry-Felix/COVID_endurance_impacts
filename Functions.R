@@ -51,18 +51,33 @@ chi2_stats <- function(input = my_data, var1, var2) {
   # Pearson's chi-squared statistics (independence test)
   data_table <- # Create the contingency table
     table(input[[var1]], input[[var2]])
-  prop_result <- # Chi-squared test
-    stats::chisq.test(x = data_table, simulate.p.value = T)
-  p_value <- prop_result$p.value # Store the p-value
-  effect_size <- # Compute the effect size
-    effectsize::phi(x = input[[var1]], y = input[[var2]])[1, 1]
-  my_power <- # Compute the statistical power
-    pwr::pwr.chisq.test(
-      w = effect_size,
-      N = sum(data_table),
-      df = 2,
-      sig.level = 0.05
-    )[[5]]
+  if (all(dim(data_table) == c(2, 2))) {
+    prop_result <- # Chi-squared test
+      stats::chisq.test(x = data_table, simulate.p.value = T)
+    p_value <- prop_result$p.value # Store the p-value
+    effect_size <- # Compute the effect size
+      effectsize::phi(x = input[[var1]], y = input[[var2]])[1, 1]
+    my_power <- # Compute the statistical power
+      pwr::pwr.chisq.test(
+        w = effect_size,
+        N = sum(data_table),
+        df = 1,
+        sig.level = 0.05
+      )[[5]]
+  } else {
+    prop_result <- # Chi-squared test
+      stats::chisq.test(x = data_table, simulate.p.value = T)
+    p_value <- prop_result$p.value # Store the p-value
+    effect_size <- # Compute the effect size
+      effectsize::cramers_v(x = input[[var1]], y = input[[var2]])[1, 1]
+    my_power <- # Compute the statistical power
+      pwr::pwr.chisq.test(
+        w = effect_size,
+        N = sum(data_table),
+        df = ncol(data_table) - 1,
+        sig.level = 0.05
+      )[[5]]
+  }
   return(dplyr::lst(prop_result, p_value, effect_size, my_power))
 }
 
@@ -150,10 +165,10 @@ barplots <-
           {
             # Adding a fill legend if required
             if (graph_fill)
-              ggplot2::labs(fill = fill_feature)
+              ggplot2::labs(fill = col_questions[col_questions$col_name == fill_feature, "plot_name"])
           } +
-          ggplot2::xlab(label = my_feature) +
-          ggplot2::ggtitle(label = paste(graph_title, my_feature)) +
+          ggplot2::xlab(label = paste(col_questions[col_questions$col_name == my_feature, "plot_name"])) +
+          ggplot2::ggtitle(label = paste(col_questions[col_questions$col_name == my_feature, "plot_name"])) +
           # Adding descriptive values on bar plots
           ggplot2::geom_text(
             # Group count
@@ -191,7 +206,12 @@ barplots <-
             signif(x = as.numeric(my_effect_size), digits = 5),
             "; pwr: ",
             signif(x = as.numeric(my_power), digits = 5)
-          ))
+          )) +
+          scale_fill_manual(
+            name = "",
+            labels = c("NEND", "END"),
+            values = c("darkgrey", "lightgrey")
+          )
       },
       my_dataset = input[features],
       my_feature = features,

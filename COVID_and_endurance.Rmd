@@ -16,6 +16,9 @@ knitr::opts_chunk$set(
   fig.height = 6
 )
 
+# Choosing seed for replicability
+set.seed(123456)
+
 # Import packages
 library(rmarkdown)
 library(tidyverse)
@@ -75,7 +78,7 @@ analysis_data$time_to_normal_training_volume_binary <-
     vectorize_all = FALSE
   )
 
-analysis_data$modified_training_volume_binary <-
+analysis_data["Training volume modifications"] <-
   analysis_data$modified_training_volume %>%
   stri_replace_all_regex(
     pattern = c(".*diminished.*",
@@ -100,18 +103,11 @@ stat_results <- mapply(
       unique() %>% length()
     if (answer_profile < 2 && usable_table < 2) {
       return(NA)
-    } else if (answer_profile == 2 && usable_table > 1) {
+    } else if (answer_profile >= 2 && usable_table > 1) {
       # Compute chi2 statistics
       chi2_stats(input = analysis_data,
                  var1 = my_colnames,
                  var2 = my_var)
-    } else if (answer_profile > 2 && usable_table > 1) {
-      # Compute ANOVA statistics
-      anova_stats(input = analysis_data,
-                  var1 = my_colnames,
-                  var2 = my_var)
-    } else {
-      return(NA)
     }
   },
   my_columns = analysis_data,
@@ -174,6 +170,164 @@ descriptive_plots <- # Put all plots in a new list
 descriptive_values <- # Put all counts in a new list
   lapply(descriptive_results[!is.na(descriptive_results)], "[[", "my_count") %>%
   discard(is.null)
+
+age_18_25 <-
+  round(count(analysis_data$age <= 25)[2, 2] / nrow(analysis_data) * 100,
+        digits = 1)
+age_26_59 <-
+  round(
+    count(26 <= analysis_data$age &
+            analysis_data$age <= 59)[2, 2] / nrow(analysis_data) * 100,
+    digits = 1
+  )
+age_60 <-
+  round(count(analysis_data$age >= 60)[2, 2] / nrow(analysis_data) * 100,
+        digits = 1)
+
+pcr_test <-
+  round(count(analysis_data$covid_test == "PCR test")[2, 2] / nrow(analysis_data) * 100,
+        digits = 1)
+antigenic_test <-
+  round(
+    count(analysis_data$covid_test == "Antigenic test")[2, 2] / nrow(analysis_data) * 100,
+    digits = 1
+  )
+
+covid_type <- count(analysis_data$covid_type) %>% my_table()
+multi_covid <-
+  round(count(analysis_data$covid_multi)[2, 2] / nrow(analysis_data) * 100,
+        digits = 1)
+
+persistent_symptoms <-
+  round(count(analysis_data$after_symptoms == "Yes")[2, 2] / nrow(analysis_data) *
+          100,
+        digits = 1)
+
+after_fatigue_prev <-
+  round(
+    count(analysis_data$after_tired == "Yes")[2, 2] / count(analysis_data$after_symptoms == "Yes")[2, 2] *
+      100,
+    digits = 1
+  )
+after_breathlessness_prev <-
+  round(
+    count(analysis_data$after_breathlessness == "Yes")[2, 2] / count(analysis_data$after_symptoms == "Yes")[2, 2] *
+      100,
+    digits = 1
+  )
+after_cough_prev <-
+  round(
+    count(analysis_data$after_cough == "Yes")[2, 2] / count(analysis_data$after_symptoms == "Yes")[2, 2] *
+      100,
+    digits = 1
+  )
+after_headache_prev <-
+  round(
+    count(analysis_data$after_headache == "Yes")[2, 2] / count(analysis_data$after_symptoms == "Yes")[2, 2] *
+      100,
+    digits = 1
+  )
+after_muscle_prev <-
+  round(
+    count(analysis_data$after_muscular_pain == "Yes")[2, 2] / count(analysis_data$after_symptoms == "Yes")[2, 2] *
+      100,
+    digits = 1
+  )
+
+train_fatigue_prev <-
+  round(count(analysis_data$training_tired == "Yes")[2, 2] / nrow(analysis_data) *
+          100,
+        digits = 1)
+train_respi_prev <-
+  round(
+    count(analysis_data$training_respiratory_difficulties == "Yes")[2, 2] /
+      nrow(analysis_data) * 100,
+    digits = 1
+  )
+train_muscle_prev <-
+  round(
+    count(analysis_data$training_muscular_pain == "Yes")[2, 2] / nrow(analysis_data) *
+      100,
+    digits = 1
+  )
+train_concentration_prev <-
+  round(
+    count(analysis_data$training_concentration_difficulties == "Yes")[2, 2] /
+      nrow(analysis_data) * 100,
+    digits = 1
+  )
+
+complication_2w <-
+  round(
+    count(
+      analysis_data$difficulties_duration == "2 weeks" |
+        analysis_data$difficulties_duration == "1 week"
+    )[2, 2] / nrow(analysis_data) * 100,
+    digits = 1
+  )
+no_complications <-
+  round(
+    count(analysis_data$difficulties_duration == "Nothing")[2, 2] / nrow(analysis_data) *
+      100,
+    digits = 1
+  )
+
+data_end <- analysis_data[analysis_data$endurance_sport == "Yes", ]
+data_nend <- analysis_data[analysis_data$endurance_sport == "No", ]
+
+asthma_end <-
+  round(nrow(data_end %>% filter(
+    grepl("asthme|bie", pathology_description)
+  )) / nrow(data_end) * 100, digits = 1)
+asthme_nend <-
+  round(nrow(data_nend %>% filter(
+    grepl("asthme|bie", pathology_description)
+  )) / nrow(data_nend) * 100, digits = 1)
+
+data_symptoms <-
+  analysis_data[, c(
+    "endurance_sport",
+    "tired",
+    "headache",
+    "cough",
+    "runny_nose",
+    "sore_throat",
+    "fever",
+    "muscular_pain"
+  )] %>%
+  `colnames<-`(
+    c(
+      "Endurance sport",
+      "Unusual fatigue",
+      "Headaches",
+      "Cough",
+      "Runny nose",
+      "Sore throat",
+      "Fever",
+      "Muscle pain"
+    )
+  )
+
+symptoms_plot <-
+  data_symptoms %>%
+  pivot_longer(cols = -"Endurance sport") %>%
+  group_by("Endurance sport") %>%
+  filter(value == "Yes") %>%
+  ggplot(aes(fill = .$`Endurance sport`, x = name)) +
+  geom_bar(position = "dodge") +
+  geom_text(
+    stat = "count",
+    aes(label = ..count..),
+    vjust = -0.2,
+    position = position_dodge(width = 0.9)
+  ) +
+  labs(fill = "Practice an endurance sport") +
+  ggtitle("Symptoms by population (END vs. NEND)") +
+  scale_fill_manual(
+    name = "",
+    labels = c("NEND", "END"),
+    values = c("darkgrey", "lightgrey")
+  )
 ```
 
 # Population description
@@ -238,6 +392,8 @@ descriptive_plots$pathology_medication
 ### Symptoms
 
 ```{r COVID symptoms}
+descriptive_plots$symptoms_duration
+symptoms_plot
 descriptive_plots[c(
   "cough",
   "fever",
@@ -307,8 +463,6 @@ descriptive_plots[c(
   "training_muscular_pain_note",
   "training_concentration_difficulties_note"
 )] %>% walk(print)
-descriptive_plots$difficulties_duration +
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
 descriptive_plots$difficulties_duration_binary
 descriptive_plots$difficulties_duration
 descriptive_plots[c(
@@ -400,7 +554,7 @@ data_profiles <-
       covid_positive,
       covid_test,
       covid_date,
-      covid_duration,
+      symptoms_duration,
       covid_type,
       covid_how_much,
       after_fever,
@@ -489,8 +643,9 @@ analysis_data$clust <- seqdist(
 ) %>%
   agnes(diss = TRUE, method = "ward") %>%
   cutree(k = 2)
-tbl_summary(data = analysis_data, by = clust) %>%
-  add_p()
+clust_summary <- tbl_summary(data = analysis_data, by = clust) %>%
+  add_p() %>% as.data.frame()
+datatable(clust_summary)
 ```
 
 # Annexes
